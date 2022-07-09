@@ -7,7 +7,8 @@
 
 #include"clsscr.h"
 #include<time.h>
-
+//2^24
+#define	MINYCNT				16888800
 typedef struct _TREE
 {
 	int vol;
@@ -33,26 +34,26 @@ int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
 	int i,j,k;
-	unsigned char *p=malloc(sizeof(_TR)*80000);
-	unsigned char *q=malloc(sizeof(_TR*)*80000);
+	unsigned char *p=malloc(sizeof(_TR)*MINYCNT);
+	unsigned char *q=malloc(sizeof(_TR*)*MINYCNT);
 	if(p == NULL)
 		return 0;
 	if(q == NULL)
 	{free(p);return 0;}
-	memset(p,0,sizeof(_TR)*80000);
-	memset(q,0,sizeof(_TR*)*80000);
+	memset(p,0,sizeof(_TR)*MINYCNT);
+	memset(q,0,sizeof(_TR*)*MINYCNT);
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
-	for(i=1;i<=52300;i++)
+	for(i=1;i<=MINYCNT-1;i++)
 	{
-		j=rand()%150000;
+		j=rand()%(MINYCNT*3);
 		tree_ins(t,j);
 		tree_balance();
 		t++;
 	}
 	i=calc_deep(count);
 	printf("ldmax=%d\trdmax=%d\tcount=%d\tdeep=%d\n",root->ld,root->rd,count,i);
-	i=tree_sort_list(root,s,count);
+	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tneed=%d\n",i,cc);
 	/*for(j=1;j<=i;j++)
 	{
