@@ -21,48 +21,45 @@ typedef struct _TREE
 _TR		*root=NULL,*last=NULL,*deep_last=NULL;
 _TR		**s=NULL;
 int count=0;//numbers of all point;use for calc normally deep
+int cc=0;
 
 int calc_deep(unsigned long c);
 int tree_sort_list(_TR *t,_TR **save,int cnt);
 int tree_balance();
 int tree_ins(_TR *t,int i);
+int tree_max(_TR *t1);
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
 	int i,j,k;
-	unsigned char *p=malloc(sizeof(_TR)*4000);
-	unsigned char *q=malloc(sizeof(_TR*)*4000);
+	unsigned char *p=malloc(sizeof(_TR)*80000);
+	unsigned char *q=malloc(sizeof(_TR*)*80000);
 	if(p == NULL)
 		return 0;
 	if(q == NULL)
 	{free(p);return 0;}
-	memset(p,0,sizeof(_TR)*4000);
-	memset(q,0,sizeof(_TR*)*4000);
+	memset(p,0,sizeof(_TR)*80000);
+	memset(q,0,sizeof(_TR*)*80000);
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
-	for(i=1;i<=1200;i++)
+	for(i=1;i<=52300;i++)
 	{
-		j=rand()%8000;
-//		printf("%d\t",j);
-//		if(i%20 == 0)
-//			printf("\n");
-	//	tree_insert(t,j);
+		j=rand()%150000;
 		tree_ins(t,j);
 		tree_balance();
 		t++;
 	}
 	i=calc_deep(count);
-//	printf("left=%d\tright=%d\tcount=%d\t==%d\tdeep=%d\n",root->lcnt,root->rcnt,count,ld,i);
-	printf("ldmax=%d\trdmax=%d\tcount=%d\n",root->ld,root->rd,count);
+	printf("ldmax=%d\trdmax=%d\tcount=%d\tdeep=%d\n",root->ld,root->rd,count,i);
 	i=tree_sort_list(root,s,count);
-	printf("%d\n",i);
-	for(j=1;j<=i;j++)
+	printf("list count=%d\tneed=%d\n",i,cc);
+	/*for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
 		if(j%20 == 0)
 			printf("\n");
-	}
+	}*/
 	free(p);
 	free(q);
 	printf("\n");
@@ -210,6 +207,7 @@ int tree_balance()
 					tmp->top=c2;tmp->left=c1;tmp->ld=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
 				}
 			}
+			deep_last=tmp;
 			if(c2 == NULL)
 			{root=tmp;}
 			else
@@ -233,6 +231,7 @@ int tree_balance()
 						c2->rd=(tmp->ld >= tmp->rd?(tmp->ld+1):(tmp->rd+1));
 				}
 			}
+			tree_max(deep_last);
 			break;
 		}
 	}
@@ -284,4 +283,30 @@ int tree_ins(_TR *t,int i)
 	return 0;
 };
 //}}}
+//{{{int tree_max(_TR *t1,_TR *t2)
+int tree_max(_TR *t1)
+{
+	int i,k;
+	_TR *c,*tmp;
+	if(t1 == NULL)
+		return 0;
+	c=t1->left;
+	k=c->ld >= c->rd?(c->ld-c->rd):(c->rd-c->ld);
+	if(k>=2)
+		cc++;
+	c=t1->right;
+	k=c->ld >= c->rd?(c->ld-c->rd):(c->rd-c->ld);
+	if(k>=2)
+		cc++;
+	return 0;	
+};
+//}}}
+
+
+
+
+
+
+
+
 
