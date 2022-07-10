@@ -62,6 +62,7 @@ int main(int argc,char **argv)
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
 	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tneed=%d\n",i,cc);
+	tree_max(last);
 	/*for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
@@ -253,7 +254,7 @@ int tree_balance()
 					}
 				}
 			}
-			tree_max(deep_last);
+			//tree_max(deep_last);
 			break;
 		}
 	}
@@ -312,18 +313,28 @@ int tree_ins(_TR *t,int i)
 //{{{int tree_max(_TR *t1,_TR *t2)
 int tree_max(_TR *t1)
 {
-	int i,k;
+	int i,j,k;
 	_TR *c,*tmp;
-	if(t1 == NULL)
+	j=root->ld-root->lm;
+	k=root->rd-root->rm;
+	i=j>k?j:k;
+	if(i<=2)
 		return 0;
-	c=t1->left;
-	k=c->ld >= c->rd?(c->ld-c->rd):(c->rd-c->ld);
-	if(k>=2)
-		cc++;
-	c=t1->right;
-	k=c->ld >= c->rd?(c->ld-c->rd):(c->rd-c->ld);
-	if(k>=2)
-		cc++;
+	if(j>k)
+		c=root->left;
+	else
+		c=root->right;
+	k=2;
+	while(c != NULL)
+	{
+		tmp=c;
+		if(tmp->lm>tmp->rm)
+			c=c->right;
+		else
+			c=c->left;
+		printf("deep=%d\tld=%d\tlm=%d\trd=%d\trm=%d\n",k,tmp->ld,tmp->lm,tmp->rd,tmp->rm);
+		k++;
+	}
 	return 0;	
 };
 //}}}
