@@ -15,8 +15,8 @@ typedef struct _TREE
 	struct _TREE *top;
 	struct _TREE *left;
 	struct _TREE *right;
-	unsigned short ld;
-	unsigned short rd;
+	unsigned short ld,lm;
+	unsigned short rd,rm;
 } _TR;
 
 _TR		*root=NULL,*last=NULL,*deep_last=NULL;
@@ -34,25 +34,32 @@ int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
 	int i,j,k;
-	unsigned char *p=malloc(sizeof(_TR)*MINYCNT);
-	unsigned char *q=malloc(sizeof(_TR*)*MINYCNT);
+	k=MINYCNT;
+	if(argc == 2)
+	{
+		k=atoi(argv[1]);
+		if((k <= 1) || k >= 33554432) //2^25
+			k=MINYCNT;
+	}
+	unsigned char *p=malloc(sizeof(_TR)*k);
+	unsigned char *q=malloc(sizeof(_TR*)*k);
 	if(p == NULL)
 		return 0;
 	if(q == NULL)
 	{free(p);return 0;}
-	memset(p,0,sizeof(_TR)*MINYCNT);
-	memset(q,0,sizeof(_TR*)*MINYCNT);
+	memset(p,0,sizeof(_TR)*k);
+	memset(q,0,sizeof(_TR*)*k);
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
-	for(i=1;i<=MINYCNT-1;i++)
+	for(i=1;i<=k-1;i++)
 	{
-		j=rand()%(MINYCNT*3);
+		j=rand()%(k*3);
 		tree_ins(t,j);
 		tree_balance();
 		t++;
 	}
 	i=calc_deep(count);
-	printf("ldmax=%d\trdmax=%d\tcount=%d\tdeep=%d\n",root->ld,root->rd,count,i);
+	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
 	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tneed=%d\n",i,cc);
 	/*for(j=1;j<=i;j++)
@@ -167,21 +174,24 @@ int tree_balance()
 					c3=tmp->right;
 					if(c3 != NULL)
 						c3->top=c1;
-					c1->top=tmp;c1->left=c3;c1->ld=tmp->rd;
+					c1->top=tmp;c1->left=c3;c1->ld=tmp->rd;c1->lm=tmp->rm;
 					tmp->top=c2;tmp->right=c1;tmp->rd=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
+					tmp->rm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 				}
 				else//right
 				{
 					c3=tmp;tmp=tmp->right;c4=tmp->left;
 					if(c4 != NULL)
 						c4->top=c3;
-					c3->right=tmp->left;c3->top=tmp;c3->rd=tmp->ld;c4=tmp->right;
+					c3->right=tmp->left;c3->top=tmp;c3->rd=tmp->ld;c3->rm=tmp->lm;c4=tmp->right;
 					if(c4 != NULL)
 						c4->top=c1;
-					c1->left=tmp->right;c1->top=tmp;c1->ld=tmp->rd;
+					c1->left=tmp->right;c1->top=tmp;c1->ld=tmp->rd;c1->lm=tmp->rm;
 					tmp->top=c2;tmp->left=c3;tmp->right=c1;
 					tmp->ld=(c3->ld >= c3->rd?(c3->ld+1):(c3->rd+1));
 					tmp->rd=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
+					tmp->lm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
+					tmp->rm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
 				}
 			}
 			else//right
@@ -191,21 +201,24 @@ int tree_balance()
 					c3=tmp;tmp=tmp->left;c4=tmp->right;
 					if(c4 != NULL)
 						c4->top=c3;
-					c3->left=tmp->right;c3->top=tmp;c3->ld=tmp->rd;c4=tmp->left;
+					c3->left=tmp->right;c3->top=tmp;c3->ld=tmp->rd;c3->lm=tmp->rm;c4=tmp->left;
 					if(c4 != NULL)
 						c4->top=c1;
-					c1->right=tmp->left;c1->top=tmp;c1->rd=tmp->ld;
+					c1->right=tmp->left;c1->top=tmp;c1->rd=tmp->ld;c1->rm=tmp->lm;
 					tmp->top=c2;tmp->left=c1;tmp->right=c3;
 					tmp->ld=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
 					tmp->rd=(c3->ld >= c3->rd?(c3->ld+1):(c3->rd+1));
+					tmp->lm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
+					tmp->rm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
 				}
 				else//right
 				{
 					c3=tmp->left;
 					if(c3 != NULL)
 						c3->top=c1;
-					c1->top=tmp;c1->right=c3;c1->rd=tmp->ld;
+					c1->top=tmp;c1->right=c3;c1->rd=tmp->ld;c1->rm=tmp->lm;
 					tmp->top=c2;tmp->left=c1;tmp->ld=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
+					tmp->rm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 				}
 			}
 			deep_last=tmp;
@@ -217,19 +230,27 @@ int tree_balance()
 				{
 					c2->left=tmp;
 					c2->ld=tmp->ld >= tmp->rd?(tmp->ld+1):(tmp->rd+1);
+					c2->lm=tmp->lm >= tmp->rm?(tmp->rm+1):(tmp->lm+1);
 				}
 				else
 				{
 					c2->right=tmp;
 					c2->rd=tmp->ld >= tmp->rd?(tmp->ld+1):(tmp->rd+1);
+					c2->rm=tmp->lm >= tmp->rm?(tmp->rm+1):(tmp->lm+1);
 				}
 				while(c2->top != NULL)
 				{
 					tmp=c2;c2=c2->top;
 					if(c2->left == tmp)
+					{
 						c2->ld=(tmp->ld >= tmp->rd?(tmp->ld+1):(tmp->rd+1));
+						c2->lm=(tmp->lm >= tmp->rm?(tmp->rm+1):(tmp->lm+1));
+					}
 					else
+					{
 						c2->rd=(tmp->ld >= tmp->rd?(tmp->ld+1):(tmp->rd+1));
+						c2->rm=(tmp->lm >= tmp->rm?(tmp->rm+1):(tmp->lm+1));
+					}
 				}
 			}
 			tree_max(deep_last);
@@ -246,7 +267,7 @@ int tree_ins(_TR *t,int i)
 	_TR *c1,*tmp;
 	int d,k;
 	if(root == NULL)
-	{root=t;t->vol=i;last=t;count++;return 0;}
+	{root=t;t->vol=i;root->ld=root->rd=1;root->lm=root->rm=1;last=t;count++;return 0;}
 	c1=root;k=0;
 	while(c1 != NULL)
 	{
@@ -257,29 +278,33 @@ int tree_ins(_TR *t,int i)
 		else
 		{tmp=c1;c1=c1->right;}
 	}
-	t->vol=i;t->top=tmp;count++;last=t;
+	t->vol=i;t->top=tmp;t->ld=t->rd=1;count++;last=t;c1=t;
+	c1->lm=c1->rm=1;
 	if(tmp->vol > i)
-	{tmp->left=t;tmp->ld=1;}
+		tmp->left=c1;
 	else
-	{tmp->right=t;tmp->rd=1;}
-	k=tmp->ld>=tmp->rd?tmp->ld:tmp->rd;
-	while(tmp->top != NULL)
+		tmp->right=c1;
+	while(tmp != NULL)
 	{
-		k++;c1=tmp;tmp=tmp->top;
+		k=(c1->ld >= c1->rd?(c1->ld + 1):(c1->rd + 1));
+		d=(c1->ld >= c1->rd?(c1->rd+1):(c1->ld+1));
 		if(c1 == tmp->left)
 		{
-			if(tmp->ld == k)
+			tmp->ld=k;tmp->lm=d;
+			/*if(tmp->ld == k)
 				return 0;
 			else
-				tmp->ld=k;
+				tmp->ld=k;*/
 		}
 		else
 		{
-			if(tmp->rd == k)
+			tmp->rd=k;tmp->rm=d;
+			/*if(tmp->rd == k)
 				return 0;
 			else
-				tmp->rd=k;
+				tmp->rd=k;*/
 		}
+		c1=tmp;tmp=tmp->top;
 	}
 	return 0;
 };
