@@ -192,7 +192,7 @@ int tree_balance()
 					tmp->ld=(c3->ld >= c3->rd?(c3->ld+1):(c3->rd+1));
 					tmp->rd=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
 					tmp->lm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
-					tmp->rm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
+					tmp->rm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 				}
 			}
 			else//right
@@ -209,7 +209,7 @@ int tree_balance()
 					tmp->top=c2;tmp->left=c1;tmp->right=c3;
 					tmp->ld=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
 					tmp->rd=(c3->ld >= c3->rd?(c3->ld+1):(c3->rd+1));
-					tmp->lm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
+					tmp->lm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 					tmp->rm=(c3->lm >= c3->rm?(c3->rm+1):(c3->lm+1));
 				}
 				else//right
@@ -219,7 +219,7 @@ int tree_balance()
 						c3->top=c1;
 					c1->top=tmp;c1->right=c3;c1->rd=tmp->ld;c1->rm=tmp->lm;
 					tmp->top=c2;tmp->left=c1;tmp->ld=(c1->ld >= c1->rd?(c1->ld+1):(c1->rd+1));
-					tmp->rm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
+					tmp->lm=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 				}
 			}
 			deep_last=tmp;
@@ -338,7 +338,6 @@ int tree_max(_TR *t1)
 	return 0;	
 };
 //}}}
-
 
 
 
