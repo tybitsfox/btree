@@ -291,19 +291,17 @@ int tree_ins(_TR *t,int i)
 		d=(c1->ld >= c1->rd?(c1->rd+1):(c1->ld+1));
 		if(c1 == tmp->left)
 		{
-			tmp->ld=k;tmp->lm=d;
-			/*if(tmp->ld == k)
-				return 0;
-			else
-				tmp->ld=k;*/
+			if(tmp->ld < k)
+				tmp->ld=k;
+			if(tmp->lm < d)
+				tmp->lm=d;
 		}
 		else
 		{
-			tmp->rd=k;tmp->rm=d;
-			/*if(tmp->rd == k)
-				return 0;
-			else
-				tmp->rd=k;*/
+			if(tmp->rd < k)
+				tmp->rd=k;
+			if(tmp->rm < d)
+				tmp->rm=d;
 		}
 		c1=tmp;tmp=tmp->top;
 	}
