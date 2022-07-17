@@ -272,12 +272,10 @@ int tree_ins(_TR *t,int i)
 	c1=root;k=0;
 	while(c1 != NULL)
 	{
+		tmp=c1;
 		if(c1->vol == i)//剔除相同项
 		{last=NULL;return 0;}
-		if(c1->vol > i)//left
-		{tmp=c1;c1=c1->left;}
-		else
-		{tmp=c1;c1=c1->right;}
+		c1=((c1->vol > i)?(c1->left):(c1->right));
 	}
 	t->vol=i;t->top=tmp;t->ld=t->rd=1;count++;last=t;c1=t;
 	c1->lm=c1->rm=1;
@@ -288,20 +286,22 @@ int tree_ins(_TR *t,int i)
 	while(tmp != NULL)
 	{
 		k=(c1->ld >= c1->rd?(c1->ld + 1):(c1->rd + 1));
-		d=(c1->ld >= c1->rd?(c1->rd+1):(c1->ld+1));
+		d=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 		if(c1 == tmp->left)
 		{
-			if(tmp->ld < k)
+		/*	if(tmp->ld < k)
 				tmp->ld=k;
 			if(tmp->lm < d)
-				tmp->lm=d;
+				tmp->lm=d;*/
+			tmp->ld=k;tmp->lm=d;
 		}
 		else
 		{
-			if(tmp->rd < k)
+		/*	if(tmp->rd < k)
 				tmp->rd=k;
 			if(tmp->rm < d)
-				tmp->rm=d;
+				tmp->rm=d;*/
+			tmp->rd=k;tmp->rm=d;
 		}
 		c1=tmp;tmp=tmp->top;
 	}
