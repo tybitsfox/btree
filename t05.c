@@ -23,17 +23,19 @@ _TR		*root=NULL,*last=NULL,*deep_last=NULL;
 _TR		**s=NULL;
 int count=0;//numbers of all point;use for calc normally deep
 int cc=0;
+int xx=0;
 
 int calc_deep(unsigned long c);
 int tree_sort_list(_TR *t,_TR **save,int cnt);
 int tree_balance();
 int tree_ins(_TR *t,int i);
 int tree_max(_TR *t1);
+int tree_b_mov();	//
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
-	int i,j,k;
+	int i,j,k,l;
 	k=MINYCNT;
 	if(argc == 2)
 	{
@@ -56,13 +58,16 @@ int main(int argc,char **argv)
 		j=rand()%(k*3);
 		tree_ins(t,j);
 		tree_balance();
+		l=tree_max(last);
+		if(l != 7)
+		{printf("err=%d\txx=%d\n",l,xx);break;}
 		t++;
 	}
 	i=calc_deep(count);
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
 	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tneed=%d\n",i,cc);
-	tree_max(last);
+	//tree_max(last);
 	/*for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
@@ -128,7 +133,7 @@ int tree_sort_list(_TR *t,_TR **save,int cnt)
 					return i;
 				tmp=cur;
 				cur=cur->top;
-				if(cur == NULL)
+				if(cur == t->top)
 					return i;
 				if(cur->left == tmp) //左返回
 				{
@@ -255,6 +260,7 @@ int tree_balance()
 				}
 			}
 			//tree_max(deep_last);
+			last=NULL;
 			break;
 		}
 	}
@@ -312,8 +318,9 @@ int tree_ins(_TR *t,int i)
 int tree_max(_TR *t1)
 {
 	int i,j,k;
-	_TR *c,*tmp;
-	j=root->ld-root->lm;
+	_TR *c,*tmp,*v[10];
+	memset((void*)v,0,sizeof(_TR *)*10);
+	/*j=root->ld-root->lm;
 	k=root->rd-root->rm;
 	i=j>k?j:k;
 	if(i<=2)
@@ -332,11 +339,118 @@ int tree_max(_TR *t1)
 			c=c->left;
 		printf("deep=%d\tld=%d\tlm=%d\trd=%d\trm=%d\n",k,tmp->ld,tmp->lm,tmp->rd,tmp->rm);
 		k++;
+	}*/
+	if(last == NULL)
+		return 7;
+	tmp=last->top;
+	if(tmp == NULL)
+		return 7;
+	if((tmp->left != NULL) && (tmp->right != NULL))//单支的插入才考虑
+		return 7;
+	i=1;tmp=last;
+	while(i<4)
+	{
+		tmp=tmp->top;
+		if(tmp==NULL)
+			return 7;
+		i=(tmp->ld >= tmp->rd?(tmp->ld):(tmp->rd));
 	}
-	return 0;	
+	if(i != 4)
+		return 7;
+	j=(tmp->lm >= tmp->rm?(tmp->rm):(tmp->lm));
+	if((i-j) != 2)
+		return 7;//到这里就可以确定以tmp为顶点的子树总节点为7
+	c=tmp->top;
+	if(c == NULL)
+		return 7;
+	i=tree_sort_list(tmp,v,10);
+	if(i == 7)
+	{
+		if(c->left == tmp)
+			c->left=v[3];
+		else
+			c->right=v[3];
+		v[3]->ld=v[3]->rd=3;v[3]->lm=v[3]->rm=3;
+		v[3]->left=v[1];v[3]->right=v[5];v[3]->top=c;
+		v[1]->top=v[3];v[1]->left=v[0];v[1]->right=v[2];
+		v[1]->ld=v[1]->rd=2;v[1]->lm=v[1]->rm=2;
+		v[0]->top=v[1];v[0]->left=v[0]->right=NULL;
+		v[0]->ld=v[0]->rd=1;v[0]->lm=v[0]->rm=1;
+		v[2]->top=v[1];v[2]->left=v[2]->right=NULL;
+		v[2]->ld=v[2]->rd=1;v[2]->lm=v[2]->rm=1;
+		v[5]->top=v[3];v[5]->left=v[4];v[5]->right=v[6];
+		v[5]->ld=v[5]->rd=2;v[5]->lm=v[5]->rm=2;
+		v[4]->top=v[5];v[4]->left=v[4]->right=NULL;
+		v[4]->ld=v[4]->rd=1;v[4]->lm=v[4]->rm=1;
+		v[6]->top=v[5];v[6]->left=v[6]->right=NULL;
+		v[6]->ld=v[6]->rd=1;v[6]->lm=v[6]->rm=1;
+		tmp=v[3];
+		while(c != NULL)
+		{
+			if(c->left == tmp)
+			{
+				c->ld=(tmp->ld>=tmp->rd?(tmp->ld+1):(tmp->rd+1));
+				c->lm=(tmp->lm>=tmp->rm?(tmp->rm+1):(tmp->lm+1));
+			}
+			else
+			{
+				c->rd=(tmp->ld>=tmp->rd?(tmp->ld+1):(tmp->rd+1));
+				c->rm=(tmp->lm>=tmp->rm?(tmp->rm+1):(tmp->lm+1));
+			}
+			tmp=c;c=c->top;
+		}
+		xx++;
+	}
+	last=NULL;
+	return i;	
 };
 //}}}
+//{{{int tree_b_mov()
+/*
+   测试移动节点内的vol实现d，m差值大于等于2的情形,
+   目前的调整，仅限于左子树或右子树内不跨越root,并限定待调整的两个节点距离小于16
+ */
+int tree_b_mov()
+{
+	_TR *c,*t,*c1,*max,*min;
+	int i,j,k;
+	c=root->left;
+	while(c != NULL)
+	{
+		i=c->ld-c->lm;j=c->rd-c->rm;
+		if(i>=2)
+		{t=c;c=c->left;continue;}
+		if(j>=2)
+		{t=c;c=c->right;continue;}
+		break;
+	}//t is root's top for adjusted,or error
+	if((t->ld-t->lm) >= 2)
+		c=t->left; //root,到这里，最大和最小已经在不同的分支上了
+	else
+	{
+		if((t->rd-t->rm) >= 2)
+			c=t->right;
+		else
+			return 0;
+	}
+	i=c->ld>=c->rd?c->ld:c->rd;
+	if(i>6) //超过6层不调整了，即调整范围是128个节点内
+		return 0;
+	if(c->ld > c->rd)
+	{//从小到大的调整
+		if(c->lm < c->rm) //varify
+			return 0;
 
+	}
+	else
+	{//从大到小的调整
+		if(c->rm < c->lm) //varify
+			return 0;
+
+	}
+	return 0;
+};
+//}}}
 
 
 
