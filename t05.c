@@ -408,7 +408,7 @@ int tree_max(_TR *t1)
 //{{{int tree_b_mov()
 /*
    测试移动节点内的vol实现d，m差值大于等于2的情形,
-   目前的调整，仅限于左子树或右子树内不跨越root,并限定待调整的两个节点距离小于16
+   目前的调整，仅限于左子树或右子树内不跨越root,并限定待调整的两个节点距离小于128
  */
 int tree_b_mov()
 {
@@ -436,18 +436,50 @@ int tree_b_mov()
 	i=c->ld>=c->rd?c->ld:c->rd;
 	if(i>6) //超过6层不调整了，即调整范围是128个节点内
 		return 0;
-	if(c->ld > c->rd)
-	{//从小到大的调整
-		if(c->lm < c->rm) //varify
-			return 0;
-
+	c1=c;
+	while(c != NULL)
+	{
+		max=c;
+		if(c->ld >= c->rd)
+			c=c->left;
+		else
+			c=c->right;
 	}
-	else
-	{//从大到小的调整
-		if(c->rm < c->lm) //varify
-			return 0;
-
+	c=c1;
+	while(c != NULL)
+	{
+		min=c;
+		if(c->lm >= c->rm)
+			c=c->right;
+		else
+			c=c->left;
 	}
+/*到这里，正常情况下，min应该还有一个子结点，而max应该就是没有兄弟的子结点.
+  但是也无法排除max有兄弟，min没有子结点的情况。因此后续的调整操作应分为：
+  1、正常情况，min有一个子结点，max是没有兄弟的子结点
+  2、min有一个子结点，max是有兄弟的子结点
+  3、min没有子结点，max是没有兄弟的子结点
+  4、min没有子结点，max是有兄弟的子结点
+  情况1、4可以实现层度的调整。情况2、3无法实现
+*/
+	t=max->top;c=min;
+	if((t->left == NULL) || (t->right == NULL))//max没有兄弟
+	{
+		if((c->left != NULL) || (c->right != NULL))//min有子结点
+		{//情况1
+		}
+		else//情况3
+			return 0;
+	}
+	else//有兄弟
+	{
+		if((c->left != NULL) || (c->right != NULL))//min有子结点
+			return 0; //情况2
+		else//情况4
+		{
+		}
+	}
+
 	return 0;
 };
 //}}}
