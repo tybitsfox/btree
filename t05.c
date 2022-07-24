@@ -43,6 +43,7 @@ int main(int argc,char **argv)
 		if((k <= 1) || k >= 33554432) //2^25
 			k=MINYCNT;
 	}
+	xx=k;
 	unsigned char *p=malloc(sizeof(_TR)*k);
 	unsigned char *q=malloc(sizeof(_TR*)*k);
 	if(p == NULL)
@@ -58,9 +59,9 @@ int main(int argc,char **argv)
 		j=rand()%(k*3);
 		tree_ins(t,j);
 		tree_balance();
-		l=tree_b_mov();
-		if(l)
-			break;
+//		l=tree_b_mov();
+//		if(l)
+//			break;
 		t++;
 	}
 	i=calc_deep(count);
@@ -381,8 +382,6 @@ int tree_b_mov()
 {
 	_TR *c,*t,*c1,*max,*min;
 	int i,j,k,l;
-	int x[256];
-	memset((void*)x,0,sizeof(int)*256);
 	c=root;t=NULL;
 	while(c != NULL)
 	{
@@ -425,23 +424,17 @@ int tree_b_mov()
 		else
 			c=c->left;
 	}
-/*到这里，正常情况下，min应该还有一个子结点，而max应该就是没有兄弟的子结点.
-  但是也无法排除max有兄弟，min没有子结点的情况。因此后续的调整操作应分为：
-  1、正常情况，min有一个子结点，max是没有兄弟的子结点
-  2、min有一个子结点，max是有兄弟的子结点
-  3、min没有子结点，max是没有兄弟的子结点
-  4、min没有子结点，max是有兄弟的子结点
-  情况1、4可以实现层度的调整。情况2、3无法实现
-*/
 	i=255;
-	memset((void*)s,0,sizeof(_TR*)*256);
+	memset((void*)s,0,sizeof(_TR*)*xx);
 	j=tree_sort_list(c1,s,i);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
 	if((max->ld != 1) || (max->rd != 1))//verified 
+		return 0;
+	if((min->lm != 1) && (min->rm != 1))
 		return 0;
 	if(max->vol < min->vol) //从左至右调整
 	{
 		k=max->vol;t=max->top;
-		if(t->left==max)
+		if(t->left == max)
 		{t->left=NULL;t->ld=t->lm=1;}
 		else
 		{t->right=NULL;t->rd=t->rm=1;}
@@ -450,8 +443,10 @@ int tree_b_mov()
 			if(s[i]->vol <= max->vol)
 				continue;
 			l=s[i]->vol;s[i]->vol=k;k=l;
-			if(s[i+1]->vol == min->vol)
+			if(s[i+1]->vol >= min->vol)
 			{
+				if(s[i+1]->vol > min->vol)
+					break;
 				if(min->left == NULL)
 				{min->left=max;max->top=min;max->vol=k;}
 				else
@@ -463,7 +458,7 @@ int tree_b_mov()
 	else //从右至左调整
 	{
 		k=max->vol;t=max->top;
-		if(t->left==max)
+		if(t->left == max)
 		{t->left=NULL;t->ld=t->lm=1;}
 		else
 		{t->right=NULL;t->rd=t->rm=1;}
@@ -472,12 +467,14 @@ int tree_b_mov()
 			if(s[i]->vol >= max->vol)
 				continue;
 			l=s[i]->vol;s[i]->vol=k;k=l;
-			if(s[i-1]->vol == min->vol)
+			if(s[i-1]->vol >= min->vol)
 			{
+				if(s[i-1]->vol > min->vol)
+					break;
 				if(min->right == NULL)
 				{min->right=max;max->top=min;max->vol=k;}
 				else
-				{min->left=max;max->top-min;max->vol=min->vol;min->vol=k;}
+				{min->left=max;max->top=min;max->vol=min->vol;min->vol=k;}
 				break;
 			}
 		}
