@@ -26,11 +26,11 @@ int cc=0;
 int xx=0;
 
 int calc_deep(unsigned long c);
-int tree_sort_list(_TR *t,_TR **save,int cnt);
-int tree_balance();
-int tree_ins(_TR *t,int i);
-int tree_max(_TR *t1);
-int tree_b_mov();	//
+int tree_sort_list(_TR *t,_TR **save,int cnt);//traverse by value's size(only low to high)
+int tree_balance();//point changed for balance
+int tree_ins(_TR *t,int i);//created new node
+int tree_max(_TR *t1);//for test
+int tree_b_mov();	//value moved for balance
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -58,9 +58,6 @@ int main(int argc,char **argv)
 		j=rand()%(k*3);
 		tree_ins(t,j);
 		tree_balance();
-		//l=tree_max(last);
-		//if(l != 7)
-		//{printf("err=%d\txx=%d\n",l,xx);break;}
 		l=tree_b_mov();
 		if(l)
 			break;
@@ -70,7 +67,6 @@ int main(int argc,char **argv)
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
 	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tneed=%d\n",i,cc);
-	//tree_max(last);
 	/*for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
@@ -311,26 +307,6 @@ int tree_max(_TR *t1)
 	int i,j,k;
 	_TR *c,*tmp,*v[10];
 	memset((void*)v,0,sizeof(_TR *)*10);
-	/*j=root->ld-root->lm;
-	k=root->rd-root->rm;
-	i=j>k?j:k;
-	if(i<=2)
-		return 0;
-	if(j>k)
-		c=root->left;
-	else
-		c=root->right;
-	k=2;
-	while(c != NULL)
-	{
-		tmp=c;
-		if(tmp->lm>tmp->rm)
-			c=c->right;
-		else
-			c=c->left;
-		printf("deep=%d\tld=%d\tlm=%d\trd=%d\trm=%d\n",k,tmp->ld,tmp->lm,tmp->rd,tmp->rm);
-		k++;
-	}*/
 	if(last == NULL)
 		return 7;
 	tmp=last->top;
@@ -457,36 +433,9 @@ int tree_b_mov()
   4、min没有子结点，max是有兄弟的子结点
   情况1、4可以实现层度的调整。情况2、3无法实现
 */
-/*	t=max->top;c=min;i=10;
-	if((t->left == NULL) || (t->right == NULL))//max没有兄弟
-	{
-		if((c->left != NULL) || (c->right != NULL))//min有子结点
-		{//情况1
-			i=1;
-		}
-		else//情况3
-		//	return 0;
-			i=3;
-	}
-	else//有兄弟
-	{
-		if((c->left != NULL) || (c->right != NULL))//min有子结点
-		//	return 0; //情况2
-			i=2;
-		else//情况4
-		{
-			i=1;
-		}
-	}*/
-	/*if(min->vol > max->vol) //从左往右找
-	{c=max;k=min->vol;}
-	else
-	{c=min;k=max->vol;}*/
 	j=0;l=1;c=c1;
 	while(l)
 	{
-/*		if(c->vol >k)
-			break;*/
 		if(c->left == NULL)
 		{x[j]=c->vol;j++;}
 		else
@@ -506,8 +455,6 @@ int tree_b_mov()
 				{l=0;break;}
 				if(c->left == t)
 				{
-					/*if(c->vol >k)
-					{l=0;break;}*/
 					x[j]=c->vol;j++;
 					if(c->right != NULL)
 					{
