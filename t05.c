@@ -297,21 +297,9 @@ int tree_ins(_TR *t,int i)
 		k=(c1->ld >= c1->rd?(c1->ld + 1):(c1->rd + 1));
 		d=(c1->lm >= c1->rm?(c1->rm+1):(c1->lm+1));
 		if(c1 == tmp->left)
-		{
-		/*	if(tmp->ld < k)
-				tmp->ld=k;
-			if(tmp->lm < d)
-				tmp->lm=d;*/
-			tmp->ld=k;tmp->lm=d;
-		}
+		{tmp->ld=k;tmp->lm=d;}
 		else
-		{
-		/*	if(tmp->rd < k)
-				tmp->rd=k;
-			if(tmp->rm < d)
-				tmp->rm=d;*/
-			tmp->rd=k;tmp->rm=d;
-		}
+		{tmp->rd=k;tmp->rm=d;}
 		c1=tmp;tmp=tmp->top;
 	}
 	return 0;
@@ -419,7 +407,7 @@ int tree_b_mov()
 	int i,j,k,l;
 	int x[256];
 	memset((void*)x,0,sizeof(int)*256);
-	c=root;
+	c=root;t=NULL;
 	while(c != NULL)
 	{
 		i=c->ld-c->lm;j=c->rd-c->rm;
@@ -429,6 +417,8 @@ int tree_b_mov()
 		{t=c;c=c->right;continue;}
 		break;
 	}//t is root's top for adjusted,or error
+	if(t == NULL)
+		return 0;
 	if((t->ld-t->lm) >= 2)
 		c=t->left; //root,到这里，最大和最小已经在不同的分支上了
 	else
@@ -467,34 +457,36 @@ int tree_b_mov()
   4、min没有子结点，max是有兄弟的子结点
   情况1、4可以实现层度的调整。情况2、3无法实现
 */
-/*	t=max->top;c=min;
+/*	t=max->top;c=min;i=10;
 	if((t->left == NULL) || (t->right == NULL))//max没有兄弟
 	{
 		if((c->left != NULL) || (c->right != NULL))//min有子结点
 		{//情况1
-			i=0;
+			i=1;
 		}
 		else//情况3
-			return 0;
+		//	return 0;
+			i=3;
 	}
 	else//有兄弟
 	{
 		if((c->left != NULL) || (c->right != NULL))//min有子结点
-			return 0; //情况2
+		//	return 0; //情况2
+			i=2;
 		else//情况4
 		{
 			i=1;
 		}
 	}*/
-	if(min->vol > max->vol) //从左往右找
+	/*if(min->vol > max->vol) //从左往右找
 	{c=max;k=min->vol;}
 	else
-	{c=min;k=max->vol;}
-	j=0;l=1;
+	{c=min;k=max->vol;}*/
+	j=0;l=1;c=c1;
 	while(l)
 	{
-		if(c->vol >=k)
-			break;
+/*		if(c->vol >k)
+			break;*/
 		if(c->left == NULL)
 		{x[j]=c->vol;j++;}
 		else
@@ -514,9 +506,9 @@ int tree_b_mov()
 				{l=0;break;}
 				if(c->left == t)
 				{
+					/*if(c->vol >k)
+					{l=0;break;}*/
 					x[j]=c->vol;j++;
-					if(c->vol >=k)
-					{l=0;break;}
 					if(c->right != NULL)
 					{
 						c=c->right;
@@ -526,7 +518,7 @@ int tree_b_mov()
 				else
 				{
 					if(c == c1)
-					{l=1;break;}
+					{l=0;break;}
 				}
 			}
 		}
@@ -535,7 +527,10 @@ int tree_b_mov()
 	}
 	for(i=0;i<j;i++)
 	{printf("%d\t",x[i]);}
-	printf("\n");
+	if(i<=15)
+		printf("\nld=%d\tlm=%d\trd=%d\trm=%d\tmax=%d\tmin=%d\tc1=%d\ti=%d\n",c1->ld,c1->lm,c1->rd,c1->rm,max->vol,min->vol,c1->vol,i);
+	else
+		printf("i=%d\n",i);
 	return 1;
 };
 //}}}
