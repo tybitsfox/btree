@@ -65,14 +65,14 @@ int main(int argc,char **argv)
 	}
 	i=calc_deep(count);
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
-	//i=tree_sort_list(root,s,count);
-	printf("list count=%d\tneed=%d\n",i,cc);
-	/*for(j=1;j<=i;j++)
+	i=tree_sort_list(root,s,count);
+	printf("list count=%d\tmoved times=%d\n",i,cc);
+	for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
 		if(j%20 == 0)
 			printf("\n");
-	}*/
+	}
 	free(p);
 	free(q);
 	printf("\n");
@@ -375,7 +375,7 @@ int tree_max(_TR *t1)
 //{{{int tree_b_mov()
 /*
    测试移动节点内的vol实现d，m差值大于等于2的情形,
-   目前的调整，仅限于左子树或右子树内不跨越root,并限定待调整的两个节点距离小于128
+   目前的调整，仅限于子树深度不大于7,即调整的节点数小于128
  */
 int tree_b_mov()
 {
@@ -405,7 +405,7 @@ int tree_b_mov()
 			return 0;
 	}
 	i=c->ld>=c->rd?c->ld:c->rd;
-	if(i>6) //超过6层不调整了，即调整范围是128个节点内
+	if(i>7) //超过6层不调整了，即调整范围是128个节点内
 		return 0;
 	c1=c;
 	while(c != NULL)
@@ -433,52 +433,80 @@ int tree_b_mov()
   4、min没有子结点，max是有兄弟的子结点
   情况1、4可以实现层度的调整。情况2、3无法实现
 */
-	j=0;l=1;c=c1;
-	while(l)
+	i=255;
+	memset((void*)s,0,sizeof(_TR*)*256);
+	j=tree_sort_list(c1,s,i);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
+	if((max->ld != 1) || (max->rd != 1))//verified 
+		return 0;
+	if(max->vol < min->vol) //从左至右调整
 	{
-		if(c->left == NULL)
-		{x[j]=c->vol;j++;}
+		k=max->vol;t=max->top;
+		if(t->left==max)
+		{t->left=NULL;t->ld=t->lm=1;}
 		else
+		{t->right=NULL;t->rd=t->rm=1;}
+		for(i=0;i<(j-1);i++)
 		{
-			while(c->left != NULL)
-			{c=c->left;}
-			continue;
-		}
-		if(c->right == NULL)
-		{
-			while(1)
+			if(s[i]->vol <= max->vol)
+				continue;
+			l=s[i]->vol;s[i]->vol=k;k=l;
+			if(s[i+1]->vol == min->vol)
 			{
-				if(j>=255)
-				{l=0;break;}
-				t=c;c=c->top;
-				if(c == c1->top)
-				{l=0;break;}
-				if(c->left == t)
-				{
-					x[j]=c->vol;j++;
-					if(c->right != NULL)
-					{
-						c=c->right;
-						break;
-					}
-				}
+				if(min->left == NULL)
+				{min->left=max;max->top=min;max->vol=k;}
 				else
-				{
-					if(c == c1)
-					{l=0;break;}
-				}
+				{min->right=max;max->top=min;max->vol=min->vol;min->vol=k;}
+				break;
+			}
+		}//开始调整层数：t，max
+	}
+	else //从右至左调整
+	{
+		k=max->vol;t=max->top;
+		if(t->left==max)
+		{t->left=NULL;t->ld=t->lm=1;}
+		else
+		{t->right=NULL;t->rd=t->rm=1;}
+		for(i=(j-1);i>0;i--)
+		{
+			if(s[i]->vol >= max->vol)
+				continue;
+			l=s[i]->vol;s[i]->vol=k;k=l;
+			if(s[i-1]->vol == min->vol)
+			{
+				if(min->right == NULL)
+				{min->right=max;max->top=min;max->vol=k;}
+				else
+				{min->left=max;max->top-min;max->vol=min->vol;min->vol=k;}
+				break;
 			}
 		}
-		else
-		{c=c->right;}
 	}
-	for(i=0;i<j;i++)
-	{printf("%d\t",x[i]);}
+	k=0;
+	if(t == NULL)
+	{printf("error\n");	return 1;}
+	while(k<=1)
+	{
+		while(t->top != NULL)
+		{
+			i=t->ld>=t->rd?(t->ld+1):(t->rd+1);
+			j=t->lm>=t->rm?(t->rm+1):(t->lm+1);
+			c=t;t=t->top;
+			if(t->left==c)
+			{t->ld=i;t->lm=j;}
+			else
+			{t->rd=i;t->rm=j;}
+		}
+		t=max;k++;
+	}
+/*	for(i=0;i<j;i++)
+	{printf("%d\t",s[i]->vol);}
 	if(i<=15)
 		printf("\nld=%d\tlm=%d\trd=%d\trm=%d\tmax=%d\tmin=%d\tc1=%d\ti=%d\n",c1->ld,c1->lm,c1->rd,c1->rm,max->vol,min->vol,c1->vol,i);
 	else
-		printf("i=%d\n",i);
-	return 1;
+		printf("i=%d\n",i);*/
+	cc++;
+	return 0;
 };
 //}}}
 
