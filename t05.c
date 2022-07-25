@@ -61,12 +61,9 @@ int main(int argc,char **argv)
 		if(tree_ins(t,j))
 			continue;
 		tree_balance();
-		/*for(i=0;i<3;i++)
-		{
-			l=tree_b_mov();
-			if(l)
-				break;
-		}*/
+		l=tree_b_mov();
+		if(l)
+			break;
 		t++;
 	}
 	i=calc_deep(count);
@@ -443,9 +440,8 @@ int tree_b_mov()
 		else
 			c=c->left;
 	}
-	i=255;
 	memset((void*)s,0,sizeof(_TR*)*(xx+3));
-	j=tree_sort_list(c1,s,i);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
+	j=tree_sort_list(c1,s,xx);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
 	if((max->ld != 1) || (max->rd != 1))//verified 
 		return 0;
 	if((min->lm != 1) && (min->rm != 1))
