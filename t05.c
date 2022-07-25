@@ -61,9 +61,12 @@ int main(int argc,char **argv)
 		if(tree_ins(t,j))
 			continue;
 		tree_balance();
-		l=tree_b_mov();
-		if(l)
-			break;
+		/*for(i=0;i<3;i++)
+		{
+			l=tree_b_mov();
+			if(l)
+				break;
+		}*/
 		t++;
 	}
 	i=calc_deep(count);
@@ -395,19 +398,33 @@ int tree_b_mov()
 		break;
 	}//t is root's top for adjusted,or error
 	if(t == NULL)
-		return 0;
-	if((t->ld-t->lm) >= 2)
-		c=t->left; //root,到这里，最大和最小已经在不同的分支上了
+	{
+		c=root;
+		if(c != NULL)
+		{
+			i=c->ld>c->rd?(c->ld):(c->rd);
+			j=c->lm>c->rm?c->rm:c->lm;
+			if(i>=(j+2))
+				t=c;
+			else
+				return 0;
+		}
+	}
 	else
 	{
-		if((t->rd-t->rm) >= 2)
-			c=t->right;
+		if((t->ld-t->lm) >= 2)
+			c=t->left; //root,到这里，最大和最小已经在不同的分支上了
 		else
-			return 0;
+		{
+			if((t->rd-t->rm) >= 2)
+				c=t->right;
+			else
+				return 0;
+		}
 	}
-	i=c->ld>=c->rd?c->ld:c->rd;
+	/*i=c->ld>=c->rd?c->ld:c->rd;
 	if(i>10) //超过6层不调整了，即调整范围是128个节点内,1024
-		return 0;
+		return 0;*/
 	c1=c;
 	while(c != NULL)
 	{
