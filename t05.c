@@ -10,6 +10,7 @@
 #include<time.h>
 //2^17-1
 #define	MINYCNT				131071
+#define EXTBUF				100
 typedef struct _TREE
 {
 	int vol;
@@ -35,6 +36,7 @@ int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
 	int i,j,k,l;
+	char ch[80];
 	k=MINYCNT;
 	if(argc == 2)
 	{
@@ -42,14 +44,14 @@ int main(int argc,char **argv)
 		if((k <= 1) || k >= 33554432) //2^25
 			k=MINYCNT;
 	}
-	unsigned char *p=malloc(sizeof(_TR)*(k+3));
-	unsigned char *q=malloc(sizeof(_TR*)*(k+3));
+	unsigned char *p=malloc(sizeof(_TR)*(k+EXTBUF));
+	unsigned char *q=malloc(sizeof(_TR*)*(k+EXTBUF));
 	if(p == NULL)
 		return 0;
 	if(q == NULL)
 	{free(p);return 0;}
-	memset(p,0,sizeof(_TR)*(k+3));
-	memset(q,0,sizeof(_TR*)*(k+3));
+	memset(p,0,sizeof(_TR)*(k+EXTBUF));
+	memset(q,0,sizeof(_TR*)*(k+EXTBUF));
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
 	while(count < k)	//保证生成指定数量的节点
@@ -58,15 +60,39 @@ int main(int argc,char **argv)
 		if(tree_ins(t,j))
 			continue;
 		tree_balance();
-		l=tree_b_mov();
+		l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
 		if(l)
 			break;
 		t++;
 	}
-	i=calc_deep(count);
-	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
+	j=calc_deep(count);
+	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
 	//i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\n",i,cc);
+	printf("list count=%d\tmoved times=%d\n",j,cc);
+	for(i=2;i<EXTBUF;i++)
+	{
+		printf("press 'q' to exit,else insert a node: ");
+		memset(ch,0,80);
+		fgets(ch,80,stdin);
+		if(ch[0] == 'q')
+			break;
+		while(1)
+		{
+			j=rand()%(k*5);
+			if(tree_ins(t,j))
+				continue;
+			tree_balance();
+			l=tree_b_mov();
+			if(l)
+				break;
+			t++;
+			break;
+		}
+		j=calc_deep(count);
+		printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
+		//i=tree_sort_list(root,s,count);
+		printf("list count=%d\tmoved times=%d\n",j,cc);
+	}
 	free(p);
 	free(q);
 	printf("\n");
@@ -323,9 +349,7 @@ int tree_b_mov()
 		{
 			i=c->ld>c->rd?(c->ld):(c->rd);
 			j=c->lm>c->rm?c->rm:c->lm;
-			if(i>=(j+2))
-				t=c;
-			else
+			if(i<(j+2))
 				return 0;
 		}
 	}
