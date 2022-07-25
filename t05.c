@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0+
  * 自平衡二叉树的完美实现
+ * 2022-7-25已经可以生成完美的自平衡二叉树，测试的2^n-1的数据量插入都可生成完美的n层二叉树，但大批量数据的连续插入效率还有待改善。
  *
  *  Copyright (c) 2020-2022 tybitsfox <tybitsfox@163.com>
  */
@@ -7,8 +8,8 @@
 
 #include"clsscr.h"
 #include<time.h>
-//2^24
-#define	MINYCNT				16888800
+//2^17-1
+#define	MINYCNT				131071
 typedef struct _TREE
 {
 	int vol;
@@ -21,16 +22,14 @@ typedef struct _TREE
 
 _TR		*root=NULL,*last=NULL,*deep_last=NULL;
 _TR		**s=NULL;
-int count=0;//numbers of all point;use for calc normally deep
+int count=0;//number of all nodes;use for calc normally deep
 int cc=0;
-int xx=0;
 
 int calc_deep(unsigned long c);
 int tree_sort_list(_TR *t,_TR **save,int cnt);//traverse by value's size(only low to high)
-int tree_balance();//point changed for balance
+int tree_balance();//balance by pointer
 int tree_ins(_TR *t,int i);//created new node
-int tree_max(_TR *t1);//for test
-int tree_b_mov();	//value moved for balance
+int tree_b_mov();	//balance by value
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -43,7 +42,6 @@ int main(int argc,char **argv)
 		if((k <= 1) || k >= 33554432) //2^25
 			k=MINYCNT;
 	}
-	xx=k;
 	unsigned char *p=malloc(sizeof(_TR)*(k+3));
 	unsigned char *q=malloc(sizeof(_TR*)*(k+3));
 	if(p == NULL)
@@ -54,8 +52,7 @@ int main(int argc,char **argv)
 	memset(q,0,sizeof(_TR*)*(k+3));
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
-//	for(i=1;i<=k-1;i++)
-	while(count < k)
+	while(count < k)	//保证生成指定数量的节点
 	{
 		j=rand()%(k*5);
 		if(tree_ins(t,j))
@@ -70,12 +67,6 @@ int main(int argc,char **argv)
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
 	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tmoved times=%d\n",i,cc);
-	/*for(j=1;j<=i;j++)
-	{
-		printf("%d\t",(s[j-1])->vol);
-		if(j%20 == 0)
-			printf("\n");
-	}*/
 	free(p);
 	free(q);
 	printf("\n");
@@ -271,7 +262,7 @@ int tree_balance()
 //}}}
 //{{{int tree_ins(_TR *t,int i)
 int tree_ins(_TR *t,int i)
-/*改进的插入函数，不再需要子结点的计数值，改为记录节点的深度值，且深度值自下向上累加，即叶节点深度为0*/	
+/*改进的插入函数，不再需要子结点的计数值，改为记录节点的深度值，且深度值自下向上累加，即叶节点深度为1*/	
 {
 	_TR *c1,*tmp;
 	int d,k;
@@ -304,81 +295,12 @@ int tree_ins(_TR *t,int i)
 	return 0;
 };
 //}}}
-//{{{int tree_max(_TR *t1,_TR *t2)
-int tree_max(_TR *t1)
-{
-	int i,j,k;
-	_TR *c,*tmp,*v[10];
-	memset((void*)v,0,sizeof(_TR *)*10);
-	if(last == NULL)
-		return 7;
-	tmp=last->top;
-	if(tmp == NULL)
-		return 7;
-	if((tmp->left != NULL) && (tmp->right != NULL))//单支的插入才考虑
-		return 7;
-	i=1;tmp=last;
-	while(i<4)
-	{
-		tmp=tmp->top;
-		if(tmp==NULL)
-			return 7;
-		i=(tmp->ld >= tmp->rd?(tmp->ld):(tmp->rd));
-	}
-	if(i != 4)
-		return 7;
-	j=(tmp->lm >= tmp->rm?(tmp->rm):(tmp->lm));
-	if((i-j) != 2)
-		return 7;//到这里就可以确定以tmp为顶点的子树总节点为7
-	c=tmp->top;
-	if(c == NULL)
-		return 7;
-	i=tree_sort_list(tmp,v,10);
-	if(i == 7)
-	{
-		if(c->left == tmp)
-			c->left=v[3];
-		else
-			c->right=v[3];
-		v[3]->ld=v[3]->rd=3;v[3]->lm=v[3]->rm=3;
-		v[3]->left=v[1];v[3]->right=v[5];v[3]->top=c;
-		v[1]->top=v[3];v[1]->left=v[0];v[1]->right=v[2];
-		v[1]->ld=v[1]->rd=2;v[1]->lm=v[1]->rm=2;
-		v[0]->top=v[1];v[0]->left=v[0]->right=NULL;
-		v[0]->ld=v[0]->rd=1;v[0]->lm=v[0]->rm=1;
-		v[2]->top=v[1];v[2]->left=v[2]->right=NULL;
-		v[2]->ld=v[2]->rd=1;v[2]->lm=v[2]->rm=1;
-		v[5]->top=v[3];v[5]->left=v[4];v[5]->right=v[6];
-		v[5]->ld=v[5]->rd=2;v[5]->lm=v[5]->rm=2;
-		v[4]->top=v[5];v[4]->left=v[4]->right=NULL;
-		v[4]->ld=v[4]->rd=1;v[4]->lm=v[4]->rm=1;
-		v[6]->top=v[5];v[6]->left=v[6]->right=NULL;
-		v[6]->ld=v[6]->rd=1;v[6]->lm=v[6]->rm=1;
-		tmp=v[3];
-		while(c != NULL)
-		{
-			if(c->left == tmp)
-			{
-				c->ld=(tmp->ld>=tmp->rd?(tmp->ld+1):(tmp->rd+1));
-				c->lm=(tmp->lm>=tmp->rm?(tmp->rm+1):(tmp->lm+1));
-			}
-			else
-			{
-				c->rd=(tmp->ld>=tmp->rd?(tmp->ld+1):(tmp->rd+1));
-				c->rm=(tmp->lm>=tmp->rm?(tmp->rm+1):(tmp->lm+1));
-			}
-			tmp=c;c=c->top;
-		}
-		xx++;
-	}
-	last=NULL;
-	return i;	
-};
-//}}}
 //{{{int tree_b_mov()
 /*
-   测试移动节点内的vol实现d，m差值大于等于2的情形,
-   目前的调整，仅限于子树深度不大于7,即调整的节点数小于128
+   测试移动节点内的vol实现d，m差值大于等于2的情形,但是这个函数到后期可能会移动大量的数据。是大批量数据插入的一个效率瓶颈。
+   因此，该函数中有个阀值，可以限定两个待移动数据之间的距离，这样可以极大的提高插入效率，可是这样生成的二叉树并不完美，某些情况下
+   可以先快速插入，待完成后再关闭阀值，通过该函数逐步调整至完美状态。
+   返回值：0 正常返回，否则错误。
  */
 int tree_b_mov()
 {
@@ -419,7 +341,7 @@ int tree_b_mov()
 				return 0;
 		}
 	}
-	/*i=c->ld>=c->rd?c->ld:c->rd;
+	/*i=c->ld>=c->rd?c->ld:c->rd; //阀值！！
 	if(i>10) //超过6层不调整了，即调整范围是128个节点内,1024
 		return 0;*/
 	c1=c;
@@ -440,8 +362,8 @@ int tree_b_mov()
 		else
 			c=c->left;
 	}
-	memset((void*)s,0,sizeof(_TR*)*(xx+3));
-	j=tree_sort_list(c1,s,xx);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
+	memset((void*)s,0,sizeof(_TR*)*(count+3));
+	j=tree_sort_list(c1,s,count);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
 	if((max->ld != 1) || (max->rd != 1))//verified 
 		return 0;
 	if((min->lm != 1) && (min->rm != 1))
@@ -495,7 +417,7 @@ int tree_b_mov()
 		}
 	}
 	k=0;
-	while(k<=1)
+	while(k<=1) //调整两个子树的层数值
 	{
 		while(t->top != NULL)
 		{
@@ -509,12 +431,6 @@ int tree_b_mov()
 		}
 		t=max;k++;
 	}
-/*	for(i=0;i<j;i++)
-	{printf("%d\t",s[i]->vol);}
-	if(i<=15)
-		printf("\nld=%d\tlm=%d\trd=%d\trm=%d\tmax=%d\tmin=%d\tc1=%d\ti=%d\n",c1->ld,c1->lm,c1->rd,c1->rm,max->vol,min->vol,c1->vol,i);
-	else
-		printf("i=%d\n",i);*/
 	cc++;
 	return 0;
 };
