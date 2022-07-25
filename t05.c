@@ -44,36 +44,38 @@ int main(int argc,char **argv)
 			k=MINYCNT;
 	}
 	xx=k;
-	unsigned char *p=malloc(sizeof(_TR)*k);
-	unsigned char *q=malloc(sizeof(_TR*)*k);
+	unsigned char *p=malloc(sizeof(_TR)*(k+3));
+	unsigned char *q=malloc(sizeof(_TR*)*(k+3));
 	if(p == NULL)
 		return 0;
 	if(q == NULL)
 	{free(p);return 0;}
-	memset(p,0,sizeof(_TR)*k);
-	memset(q,0,sizeof(_TR*)*k);
+	memset(p,0,sizeof(_TR)*(k+3));
+	memset(q,0,sizeof(_TR*)*(k+3));
 	t=(_TR *)p;s=(_TR **)q;
 	srand((int)time(0));
-	for(i=1;i<=k-1;i++)
+//	for(i=1;i<=k-1;i++)
+	while(count < k)
 	{
-		j=rand()%(k*3);
-		tree_ins(t,j);
+		j=rand()%(k*5);
+		if(tree_ins(t,j))
+			continue;
 		tree_balance();
-//		l=tree_b_mov();
-//		if(l)
-//			break;
+		l=tree_b_mov();
+		if(l)
+			break;
 		t++;
 	}
 	i=calc_deep(count);
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,i);
-	i=tree_sort_list(root,s,count);
+	//i=tree_sort_list(root,s,count);
 	printf("list count=%d\tmoved times=%d\n",i,cc);
-	for(j=1;j<=i;j++)
+	/*for(j=1;j<=i;j++)
 	{
 		printf("%d\t",(s[j-1])->vol);
 		if(j%20 == 0)
 			printf("\n");
-	}
+	}*/
 	free(p);
 	free(q);
 	printf("\n");
@@ -280,7 +282,7 @@ int tree_ins(_TR *t,int i)
 	{
 		tmp=c1;
 		if(c1->vol == i)//剔除相同项
-		{last=NULL;return 0;}
+		{last=NULL;return 1;}
 		c1=((c1->vol > i)?(c1->left):(c1->right));
 	}
 	t->vol=i;t->top=tmp;t->ld=t->rd=1;count++;last=t;c1=t;
@@ -404,7 +406,7 @@ int tree_b_mov()
 			return 0;
 	}
 	i=c->ld>=c->rd?c->ld:c->rd;
-	if(i>7) //超过6层不调整了，即调整范围是128个节点内
+	if(i>10) //超过6层不调整了，即调整范围是128个节点内,1024
 		return 0;
 	c1=c;
 	while(c != NULL)
@@ -425,7 +427,7 @@ int tree_b_mov()
 			c=c->left;
 	}
 	i=255;
-	memset((void*)s,0,sizeof(_TR*)*xx);
+	memset((void*)s,0,sizeof(_TR*)*(xx+3));
 	j=tree_sort_list(c1,s,i);//这里得到的是子树c1的节点数组，需要调整的只是min到max之间的节点
 	if((max->ld != 1) || (max->rd != 1))//verified 
 		return 0;
@@ -467,9 +469,9 @@ int tree_b_mov()
 			if(s[i]->vol >= max->vol)
 				continue;
 			l=s[i]->vol;s[i]->vol=k;k=l;
-			if(s[i-1]->vol >= min->vol)
+			if(s[i-1]->vol <= min->vol)
 			{
-				if(s[i-1]->vol > min->vol)
+				if(s[i-1]->vol < min->vol)
 					break;
 				if(min->right == NULL)
 				{min->right=max;max->top=min;max->vol=k;}
@@ -480,8 +482,6 @@ int tree_b_mov()
 		}
 	}
 	k=0;
-	if(t == NULL)
-	{printf("error\n");	return 1;}
 	while(k<=1)
 	{
 		while(t->top != NULL)
