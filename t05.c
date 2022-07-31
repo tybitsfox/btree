@@ -25,13 +25,15 @@ _TR		*root=NULL,*last=NULL,*deep_last=NULL;
 _TR		**s=NULL;
 int count=0;//number of all nodes;use for calc normally deep
 int cc=0;
-int xx=0;
+int lim[40];
+int idx=0;
+
 int calc_deep(unsigned long c);
 int tree_sort_list(_TR *t,_TR **save,int cnt);//traverse by value's size(only low to high)
 int tree_balance();//balance by pointer
 int tree_ins(_TR *t,int i);//created new node
 int tree_b_mov();	//balance by value
-int tree_v_mov();
+int tree_v_mov();	//for test
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -53,25 +55,59 @@ int main(int argc,char **argv)
 	{free(p);return 0;}
 	memset(p,0,sizeof(_TR)*(k+EXTBUF));
 	memset(q,0,sizeof(_TR*)*(k+EXTBUF));
-	t=(_TR *)p;s=(_TR **)q;
+	t=(_TR *)p;s=(_TR **)q;j=1;
+	for(i=0;i<22;i++)
+	{
+		j*=2;
+		lim[i]=j-1;
+	}
 	srand((int)time(0));
 	while(count < k)	//保证生成指定数量的节点
 	{
 		j=rand()%(k*5);
 		if(tree_ins(t,j))
 			continue;
+		if(count > lim[idx])
+			idx++;
 		//tree_balance();
-		l=tree_v_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
+		if(tree_balance())
+		{
+			if(tree_v_mov()) //此时last有效
+				break;
+		}
+		/*l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
 		if(l)
-			break;
+			break;*/
 		t++;
 	}
 	j=calc_deep(count);
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
-//	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\t nei loop=%d\n",j,cc,xx);
-//	for(j=0;j<i;j++)
-//		printf("%d\t",s[j]->vol);
+	//i=tree_sort_list(root,s,count);
+	printf("list count=%d\tmoved times=%d\n",j,cc);
+	/*for(i=2;i<EXTBUF;i++)
+	{
+		printf("press 'q' to exit,else insert a node: ");
+		memset(ch,0,80);
+		fgets(ch,80,stdin);
+		if(ch[0] == 'q')
+			break;
+		while(1)
+		{
+			j=rand()%(k*5);
+			if(tree_ins(t,j))
+				continue;
+			tree_balance();
+			l=tree_b_mov();
+			if(l)
+				break;
+			t++;
+			break;
+		}
+		j=calc_deep(count);
+		printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
+		//i=tree_sort_list(root,s,count);
+		printf("list count=%d\tmoved times=%d\n",j,cc);
+	}*/
 	free(p);
 	free(q);
 	printf("\n");
@@ -259,10 +295,10 @@ int tree_balance()
 			}
 			//tree_max(deep_last);
 			last=NULL;
-			break;
+			return 0;
 		}
 	}
-	return 0;
+	return 1;
 };
 //}}}
 //{{{int tree_ins(_TR *t,int i)
@@ -386,10 +422,7 @@ int tree_b_mov()
 			if(s[i+1]->vol >= min->vol)
 			{
 				if(s[i+1]->vol > min->vol)
-				{
-					printf("errooooor\n");
-					return 1;
-				}
+					break;
 				if(min->left == NULL)
 				{min->left=max;max->top=min;max->vol=k;}
 				else
@@ -413,10 +446,7 @@ int tree_b_mov()
 			if(s[i-1]->vol <= min->vol)
 			{
 				if(s[i-1]->vol < min->vol)
-				{
-					printf("errorrrr\n");
-					return 1;
-				}
+					break;
 				if(min->right == NULL)
 				{min->right=max;max->top=min;max->vol=k;}
 				else
@@ -447,117 +477,115 @@ int tree_b_mov()
 //{{{int tree_v_mov()
 int tree_v_mov()
 {
-	_TR	*c,*t,*c1,*max,*min;
+	_TR *c,*t,*max,*min;
 	int i,j,k,l;
-	c=root;t=NULL;k=0;
-	while(c != NULL)
+	if(last == NULL)
+		return 0;
+	c=last;t=NULL;k=0;min=NULL;max=last;l=count>1030?1030:count;//2^10+6
+	while(c->top != NULL)
 	{
-		i=c->ld>=c->rd?c->ld:c->rd;
-		j=c->lm>=c->rm?c->rm:c->lm;
-		if(i>=(j+2))
-			t=c;
-		if(c->lm>=c->rm)
-			c=c->right;
-		else
-			c=c->left;
+		t=c;c=c->top;k++;
+		if(k>10)
+			return 0;
+		if(c->left == t)//左返回
+		{
+			if(c->ld < (c->rm+2))
+				continue;
+			t=c;c=c->right;
+			while(c != NULL)
+			{
+				min=c;
+				if(c->lm > c->rm)
+					c=c->right;
+				else
+					c=c->left;
+			}
+			if(min == NULL)
+			{printf("error005\n");return 1;}
+			memset((void*)s,0,sizeof(_TR*)*l);
+			j=tree_sort_list(t,s,l);
+			if((max->ld != 1) || (max->rd != 1))//verified 
+			{printf("error001\n");	return 1;}
+			if((min->lm != 1) && (min->rm != 1))
+			{printf("error002\n");	return 1;}
+			if(min == NULL)
+			{printf("error003\n");	return 1;}
+			if((max->vol >= t->vol)||(min->vol<=t->vol))
+			{printf("error004\n");	return 1;}
+			k=max->vol;t=max->top;
+			if(t->left == max)
+			{t->left=NULL;t->ld=t->lm=1;}
+			else
+			{t->right=NULL;t->rd=t->rm=1;}
+			for(i=0;i<(j-1);i++)
+			{
+				if(s[i]->vol <= max->vol)
+					continue;
+				l=s[i]->vol;s[i]->vol=k;k=l;
+				if(s[i+1]->vol >= min->vol)
+				{
+					if(s[i+1]->vol > min->vol)
+						break;
+					if(min->left == NULL)
+					{min->left=max;max->top=min;max->vol=k;}
+					else
+					{min->right=max;max->top=min;max->vol=min->vol;min->vol=k;}
+					break;
+				}
+			}//开始调整层数：t，max
+			break;
+		}
+		if(c->right == t) //右返回
+		{
+			if(c->rd < (c->lm+2))
+				continue;
+			t=c;c=c->left;
+			while(c != NULL)
+			{
+				min=c;
+				if(c->lm > c->rm)
+					c=c->right;
+				else
+					c=c->left;
+			}
+			if(min == NULL)
+			{printf("error006");return 1;}
+			memset((void*)s,0,sizeof(_TR*)*l);
+			j=tree_sort_list(t,s,l);
+			if((max->ld != 1) || (max->rd != 1))//verified 
+			{printf("error007\n");	return 1;}
+			if((min->lm != 1) && (min->rm != 1))
+			{printf("error008\n");	return 1;}
+			if(min == NULL)
+			{printf("error009\n");	return 1;}
+			if((max->vol <= t->vol)||(min->vol >= t->vol))
+			{printf("error010\n");	return 1;}
+			k=max->vol;t=max->top;
+			if(t->left == max)
+			{t->left=NULL;t->ld=t->lm=1;}
+			else
+			{t->right=NULL;t->rd=t->rm=1;}
+			for(i=(j-1);i>0;i--)
+			{
+				if(s[i]->vol >= max->vol)
+					continue;
+				l=s[i]->vol;s[i]->vol=k;k=l;
+				if(s[i-1]->vol <= min->vol)
+				{
+					if(s[i-1]->vol < min->vol)
+						break;
+					if(min->right == NULL)
+					{min->right=max;max->top=min;max->vol=k;}
+					else
+					{min->left=max;max->top=min;max->vol=min->vol;min->vol=k;}
+					break;
+				}
+			}
+			break;
+		}
 	}
 	if(t == NULL)
 		return 0;
-	i=t->ld>=t->rd?(t->ld-t->rd):(t->rd-t->ld);
-	if(i>=2)
-	{
-		c=t;
-		while(c != NULL)
-		{
-			last=c;
-			if(c->ld >= c->rd)
-			   c=c->left;
-			else
-				c=c->right;
-		}
-		tree_balance();
-		xx++;
-		return 0;
-	}
-	c=t;c1=t;
-	while(c != NULL)
-	{
-		max=c;
-		if(c->ld >= c->rd)
-			c=c->left;
-		else
-			c=c->right;
-	}
-	c=t;
-	while(c != NULL)
-	{
-		min=c;
-		if(c->lm >= c->rm)
-			c=c->right;
-		else
-			c=c->left;
-	}
-	c=t;
-	memset((void*)s,0,sizeof(_TR*)*(count+3));
-	j=tree_sort_list(c,s,count);
-	if((max->ld != 1) || (max->rd != 1))//verified 
-		return 0;
-	if((min->lm != 1) && (min->rm != 1))
-		return 0;
-	if(max->vol < min->vol) //从左至右调整
-	{
-		k=max->vol;t=max->top;
-		if(t->left == max)
-		{t->left=NULL;t->ld=t->lm=1;}
-		else
-		{t->right=NULL;t->rd=t->rm=1;}
-		for(i=0;i<(j-1);i++)
-		{
-			if(s[i]->vol <= max->vol)
-				continue;
-			if(s[i+1]->vol > min->vol)
-			{
-				printf("errooooor\n");
-				return 1;
-			}
-			l=s[i]->vol;s[i]->vol=k;k=l;
-			if(s[i+1]->vol == min->vol)
-			{
-				if(min->left == NULL)
-				{min->left=max;max->top=min;max->vol=k;}
-				else
-				{min->right=max;max->top=min;max->vol=min->vol;min->vol=k;}
-				break;
-			}
-		}//开始调整层数：t，max
-	}
-	else //从右至左调整
-	{
-		k=max->vol;t=max->top;
-		if(t->left == max)
-		{t->left=NULL;t->ld=t->lm=1;}
-		else
-		{t->right=NULL;t->rd=t->rm=1;}
-		for(i=(j-1);i>0;i--)
-		{
-			if(s[i]->vol >= max->vol)
-				continue;
-			if(s[i-1]->vol < min->vol)
-			{
-				printf("errorrrr\n");
-				return 1;
-			}
-			l=s[i]->vol;s[i]->vol=k;k=l;
-			if(s[i-1]->vol == min->vol)
-			{
-				if(min->right == NULL)
-				{min->right=max;max->top=min;max->vol=k;}
-				else
-				{min->left=max;max->top=min;max->vol=min->vol;min->vol=k;}
-				break;
-			}
-		}
-	}
 	k=0;
 	while(k<=1) //调整两个子树的层数值
 	{
@@ -574,7 +602,6 @@ int tree_v_mov()
 		t=max;k++;
 	}
 	cc++;
-
 	return 0;
 };
 //}}}
