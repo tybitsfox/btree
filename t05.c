@@ -475,6 +475,7 @@ int tree_b_mov()
 };
 //}}}
 //{{{int tree_v_mov()
+/*这是一个自叶向根的平衡移动，好处是尽量减少每次移动的数据量，但移动次数要多*/
 int tree_v_mov()
 {
 	_TR *c,*c1,*t,*max,*min;
@@ -485,8 +486,8 @@ int tree_v_mov()
 	while(c->top != NULL)
 	{
 		t=c;c=c->top;k++;
-		if(k>10)
-			return 0;
+//		if(k>10)
+//			return 0;
 		if(c->left == t)//左返回
 		{
 			if(c->ld < (c->rm+2))
@@ -590,8 +591,6 @@ int tree_v_mov()
 			else
 			{t->right=NULL;t->rd=t->rm=1;}
 			v1=1;break;
-
-
 		}
 	}
 	if((t == NULL) || (v1 != 1))
