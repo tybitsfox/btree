@@ -34,6 +34,7 @@ int tree_balance();//balance by pointer
 int tree_ins(_TR *t,int i);//created new node
 int tree_b_mov();	//balance by value
 int tree_v_mov();	//for test
+int tree_bb_mov();	//test for tree_b_mov
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -69,15 +70,15 @@ int main(int argc,char **argv)
 			continue;
 		if(count > lim[idx])
 			idx++;
-		//tree_balance();
-		if(tree_balance())
+		tree_balance();
+		/*if(tree_balance())
 		{
 			if(tree_v_mov()) //此时last有效
 				break;
-		}
-		/*l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
+		}*/
+		l=tree_bb_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
 		if(l)
-			break;*/
+			break;
 		t++;
 	}
 	j=calc_deep(count);
@@ -505,12 +506,6 @@ int tree_v_mov()
 			{printf("error001\n");return 1;}
 			memset((void*)s,0,sizeof(_TR*)*l);
 			j=tree_sort_list(t,s,l);
-			/*if((max->ld != 1) || (max->rd != 1))//verified 
-			{printf("error002\n");	return 1;}
-			if((min->lm != 1) && (min->rm != 1))
-			{printf("error003\n");	return 1;}
-			if((max->vol >= t->vol)||(min->vol<=t->vol))
-			{printf("error004\n");	return 1;}*/
 			k=max->vol;t=max->top;v1=v2=-1;
 			for(i=0;i<j;i++)
 			{
@@ -524,8 +519,6 @@ int tree_v_mov()
 				printf("error 005 \n");
 				return 1;
 			}
-			/*if(v1>=v2)
-			{printf("error 006\n");return 1;}*/
 			k=0;
 			for(i=v1;i<v2;i++)
 			{
@@ -558,12 +551,6 @@ int tree_v_mov()
 			{printf("error007");return 1;}
 			memset((void*)s,0,sizeof(_TR*)*l);
 			j=tree_sort_list(t,s,l);
-			/*if((max->ld != 1) || (max->rd != 1))//verified 
-			{printf("error008\n");	return 1;}
-			if((min->lm != 1) && (min->rm != 1))
-			{printf("error009\n");	return 1;}
-			if((max->vol <= t->vol)||(min->vol >= t->vol))
-			{printf("error010\n");	return 1;} */
 			k=max->vol;t=max->top;v1=v2=-1;
 			for(i=0;i<j;i++)
 			{
@@ -572,13 +559,6 @@ int tree_v_mov()
 				if(s[i] == min)
 					v2=i;
 			}
-			/*if((v1 == -1) || (v2 == -1))
-			{
-				printf("error 011 \n");
-				return 1;
-			}
-			if(v1<=v2)
-			{printf("error 012\n");return 1;}*/
 			k=0;
 			for(i=v1;i>v2;i--)
 			{l=s[i]->vol;s[i]->vol=k;k=l;}
@@ -614,7 +594,123 @@ int tree_v_mov()
 	return 0;
 };
 //}}}
-
+//{{{int tree_bb_mov()
+/*虽然这种方法不完美，但继续测试下。画个比较满意的句号吧*/
+int tree_bb_mov()
+{
+	_TR *c,*c1,*t,*max,*min;
+	int i,j,k,l,v1,v2;
+	c=root;t=NULL;
+	while(c != NULL)
+	{
+		i=c->ld-c->lm;j=c->rd-c->rm;
+		if(i>=2)
+		{t=c;c=c->left;continue;}
+		if(j>=2)
+		{t=c;c=c->right;continue;}
+		break;
+	}
+	if(t == NULL)
+		return 0;
+	if((t->ld-t->lm) >= 2)
+		c1=t->left;
+	else
+	{
+		if((t->rd-t->rm) >= 2)
+			c1=t->right;
+		else
+//			return 0; impossible
+		{printf("error 000\n");return 1;}
+	}//c1为最大最小层在不同子树的节点
+	if((c1->ld >= c1->rd) && (c1->lm > c1->rm))
+	{c=c1->left;t=c1->right;}
+	else
+	{
+		if((c1->rd >= c1->ld) && (c1->rm > c1->lm))
+		{c=c1->right;t=c1->left;}
+		else
+//			return 0;
+		{printf("error 001\n");return 1;}
+	}//verified again,if pass then c include max,t include min
+	max=min=NULL;
+	while(c != NULL)
+	{
+		max=c;
+		if(c->ld >= c->rd)
+			c=c->left;
+		else
+			c=c->right;
+	}
+	while(t != NULL)
+	{
+		min=t;
+		if(t->lm >= t->rm)
+			t=t->right;
+		else
+			t=t->left;
+	}
+	if(max == NULL || min == NULL)
+	{printf("error 002\n");return 1;}
+	memset((void*)s,0,sizeof(_TR*)*(count+3));
+	j=tree_sort_list(c1,s,count);
+	if((max->ld != 1) || (max->rd != 1))//verify
+		return 0;
+	if((min->lm != 1) && (min->rm != 1))
+		return 0;
+	v1=v2=-count;
+	for(i=0;i<j;i++)
+	{
+		if(s[i] == max)
+			v1=i;
+		if(s[i] == min)
+			v2=i;
+		if((v1+v2) > 0)
+			break;
+	}
+	if((v1+v2) <= 0)
+	{printf("error 003\tmax=%d\ttop=%d\tmin=%d\tc1->ld=%d\tc1->lm=%d\tc1->rd=%d\tc1->rm=%d\n",max->vol,c1->vol,min->vol,c1->ld,c1->lm,c1->rd,c1->rm);return 1;}
+	k=max->vol;t=max->top;
+	if(t->left == max)
+	{t->left=NULL;t->ld=t->lm=1;}
+	else
+	{t->right=NULL;t->rd=t->rm=1;}
+	if(v1 < v2) //from left to right
+	{
+		for(i=(v1+1);i<v2;i++)
+		{l=s[i]->vol;s[i]->vol=k;k=l;}
+		if(min->left == NULL)
+		{min->left=max;max->top=min;max->vol=k;}
+		else
+		{min->right=max;max->top=min;max->vol=min->vol;min->vol=k;}
+	}
+	else //right to left
+	{
+		for(i=(v1-1);i>v2;i--)
+		{l=s[i]->vol;s[i]->vol=k;k=l;}
+		if(min->right == NULL)
+		{min->right=max;max->top=min;max->vol=k;}
+		else
+		{min->left=max;max->top=min;max->vol=min->vol;min->vol=k;}
+	}
+	k=0;
+	while(k<=1)
+	{
+		while(t->top != NULL)
+		{
+			i=t->ld>=t->rd?(t->ld+1):(t->rd+1);
+			j=t->lm>=t->rm?(t->rm+1):(t->lm+1);
+			c=t;t=t->top;
+			if(t->left==c)
+			{t->ld=i;t->lm=j;}
+			else
+			{t->rd=i;t->rm=j;}
+		}
+		t=max;k++;
+	}
+	cc++;
+	return 0;
+};
+//}}}
 
 
 
