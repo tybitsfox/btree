@@ -24,7 +24,7 @@ typedef struct _TREE
 _TR		*root=NULL,*last=NULL;
 _TR		**s=NULL;
 int count=0;//number of all nodes;use for calc normally deep
-int cc=0;
+int cc=0,zz=0;
 int lim[40];
 int idx=0;
 
@@ -70,24 +70,24 @@ int main(int argc,char **argv)
 			continue;
 		if(count > lim[idx])
 			idx++;
-		//tree_balance();
-		if(tree_balance())
+		tree_balance();
+		/*if(tree_balance())
 		{
 			if(tree_v_mov()) //此时last有效
 				break;
-		}
-		/*l=tree_bb_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
+		}*/
+		l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
 		if(l)
-			break;*/
+			break;
 //		i=tree_sort_list(root,s,count);
 //		if(i != count)
 //		{printf("ERROR!! i=%d\tcount=%d\n",i,count);return 1;}
 		t++;
 	}
-//	j=calc_deep(count);
+	j=calc_deep(count);
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
 	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\n",i,cc);
+	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
 	/*for(i=2;i<EXTBUF;i++)
 	{
 		printf("press 'q' to exit,else insert a node: ");
@@ -370,6 +370,7 @@ int tree_b_mov()
 			if(i<(j+2))
 				return 0;
 		}
+		zz++;
 	}
 	else
 	{
@@ -380,7 +381,7 @@ int tree_b_mov()
 			if((t->rd-t->rm) >= 2)
 				c=t->right;
 			else
-				return 0;
+			{printf("error001\n");return 1;}
 		}
 	}
 	/*i=c->ld>=c->rd?c->ld:c->rd; //阀值！！
@@ -602,7 +603,7 @@ int tree_bb_mov()
 {
 	_TR *c,*c1,*t,*m1,*m2;
 	int i,j,k,l,v1,v2;
-	c=root;t=NULL;
+	c=root;t=NULL;k=0;
 	while(c != NULL)
 	{
 		i=c->ld >= c->rd?c->ld:c->rd;
@@ -724,111 +725,6 @@ int tree_bb_mov()
 	}
 	cc++;
 	return 0;
-/*	while(c != NULL)
-	{
-		i=c->ld-c->lm;j=c->rd-c->rm;
-		if(i>=2)
-		{t=c;c=c->left;continue;}
-		if(j>=2)
-		{t=c;c=c->right;continue;}
-		break;
-	}
-	if(t == NULL)
-		return 0;
-	if((t->ld-t->lm) >= 2)
-		c1=t->left;
-	else
-		c1=t->right;//c1为最大最小层在不同子树的节点
-	c=t=NULL;v1=0;
-	if((c1->ld >= c1->rd) && (c1->lm > c1->rm))
-	{c=c1->left;t=c1->right;v1=1;}
-	if((c1->rd >= c1->ld) && (c1->rm > c1->lm))
-	{c=c1->right;t=c1->left;v1=2;}
-	if((c == NULL) || (t == NULL))
-	{printf("wrong\n");return 1;}
-	if(c->top != t->top)
-	{printf("wrong!!!\tc->top=%p\tt->top=%p\tc1=%p\tv1=%d\n",(void *)c->top,(void*)t->top,(void*)c1,v1);return 1;}
-//verified again,if pass then c include max,t include min
-	max=min=NULL;
-	while(c != NULL)
-	{
-		max=c;
-		if(c->ld >= c->rd)
-			c=c->left;
-		else
-			c=c->right;
-	}
-	while(t != NULL)
-	{
-		min=t;
-		if(t->lm >= t->rm)
-			t=t->right;
-		else
-			t=t->left;
-	}
-	if(max == NULL || min == NULL)
-	{printf("error 002\n");return 1;}
-	if((max->ld != 1) || (max->rd != 1))//verify
-		return 0;
-	if((min->lm != 1) && (min->rm != 1))
-		return 0;
-	memset((void*)s,0,sizeof(_TR*)*(count+3));
-	j=tree_sort_list(c1,s,count);
-	v1=v2=-1;
-	for(i=0;i<j;i++)
-	{
-		if(s[i] == max)
-		{v1=i;break;}
-	}
-	for(i=0;i<j;i++)
-	{
-		if(s[i] == min)
-		{v2=i;break;}
-	}
-	if((v1 == -1) || (v2 == -1))
-	{printf("error 003\tmax=%d\ttop=%d\tmin=%d\tc1->ld=%d\tc1->lm=%d\tc1->rd=%d\tc1->rm=%d\n",max->vol,c1->vol,min->vol,c1->ld,c1->lm,c1->rd,c1->rm);return 1;}
-	if(v1 == v2)
-	{printf("asdfsadf\n");return 1;}
-	k=max->vol;t=max->top;
-	if(t->left == max)
-	{t->left=NULL;t->ld=t->lm=1;}
-	else
-	{t->right=NULL;t->rd=t->rm=1;}
-	if(v1 < v2) //from left to right
-	{
-		for(i=(v1+1);i<v2;i++)
-		{l=s[i]->vol;s[i]->vol=k;k=l;}
-		if(min->left == NULL)
-		{min->left=max;max->top=min;max->vol=k;}
-		else
-		{min->right=max;max->top=min;max->vol=min->vol;min->vol=k;}
-	}
-	else //right to left
-	{
-		for(i=(v1-1);i>v2;i--)
-		{l=s[i]->vol;s[i]->vol=k;k=l;}
-		if(min->right == NULL)
-		{min->right=max;max->top=min;max->vol=k;}
-		else
-		{min->left=max;max->top=min;max->vol=min->vol;min->vol=k;}
-	}
-	k=0;
-	while(k<=1)
-	{
-		while(t->top != NULL)
-		{
-			i=t->ld>=t->rd?(t->ld+1):(t->rd+1);
-			j=t->lm>=t->rm?(t->rm+1):(t->lm+1);
-			c=t;t=t->top;
-			if(t->left==c)
-			{t->ld=i;t->lm=j;}
-			else
-			{t->rd=i;t->rm=j;}
-		}
-		t=max;k++;
-	}
-	cc++;
-	return 0;*/
 };
 //}}}
 
