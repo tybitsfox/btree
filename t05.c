@@ -21,7 +21,7 @@ typedef struct _TREE
 	unsigned short rd,rm;
 } _TR;
 
-_TR		*root=NULL,*last=NULL;
+_TR		*root=NULL,*last=NULL,*deep_last[3];
 _TR		**s=NULL;
 int count=0;//number of all nodes;use for calc normally deep
 int cc=0,zz=0;
@@ -40,7 +40,7 @@ int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
 	int i,j,k,l;
-	char ch[80];
+	char ch[1024];
 	k=MINYCNT;
 	if(argc == 2)
 	{
@@ -48,6 +48,7 @@ int main(int argc,char **argv)
 		if((k <= 1) || k >= 33554432) //2^25
 			k=MINYCNT;
 	}
+	deep_last[0]=deep_last[1]=deep_last[2]=NULL;
 	unsigned char *p=malloc(sizeof(_TR)*(k+EXTBUF));
 	unsigned char *q=malloc(sizeof(_TR*)*(k+EXTBUF));
 	if(p == NULL)
@@ -80,11 +81,29 @@ int main(int argc,char **argv)
 		l=t_b_mov();
 		if(l)
 			break;
+		i=tree_sort_list(root,s,count);
 		t++;
 	}
-	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
+	/*if(l)
+	{
+		k=open("aaa.txt",O_RDWR);
+		if(k>0)
+		{
+			for(j=0;j<i;j++)
+			{
+				memset(ch,0,1024);
+				snprintf(ch,1024,"<v=%d;t=%p;l=%p;r=%p>",s[j]->vol,s[j]->top,s[j]->left,s[j]->right);
+				write(k,ch,strlen(ch));
+			}
+			memset(ch,0,1024);
+			snprintf(ch,1024,"\n\n<top->vol=%d\tm1->vol=%d\tm2->vol=%d\n>",deep_last[0]->vol,deep_last[1]->vol,deep_last[2]->vol);
+			write(k,ch,strlen(ch));
+			close(k);
+		}
+	}*/
+	/*printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
 	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
+	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);*/
 	/*for(i=2;i<EXTBUF;i++)
 	{
 		printf("press 'q' to exit,else insert a node: ");
@@ -768,7 +787,7 @@ int t_b_mov()
 		{v2=i;break;}
 	}
 	if((v1 == -1) || (v2 == -1))
-	{printf("error 001\n");return 1;}
+	{printf("error 001\n");deep_last[0]=c;deep_last[1]=m1;deep_last[2]=m2;return 1;}
 	k=m1->vol;t=m1->top;
 	if(m1 == NULL || m2 == NULL || t == NULL)
 	{printf("error 002\n");return 1;}
