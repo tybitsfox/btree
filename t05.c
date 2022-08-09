@@ -28,13 +28,13 @@ int cc=0,zz=0;
 int lim[40];
 int idx=0;
 
-int calc_deep(unsigned long c);
 int tree_sort_list(_TR *t,_TR **save,int cnt);//traverse by value's size(only low to high)
 int tree_balance();//balance by pointer
 int tree_ins(_TR *t,int i);//created new node
 int tree_b_mov();	//balance by value
 int tree_v_mov();	//for test
 int tree_bb_mov();	//test for tree_b_mov
+int t_b_mov();
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -57,7 +57,7 @@ int main(int argc,char **argv)
 	memset(p,0,sizeof(_TR)*(k+EXTBUF));
 	memset(q,0,sizeof(_TR*)*(k+EXTBUF));
 	t=(_TR *)p;s=(_TR **)q;j=1;
-	for(i=0;i<22;i++)
+	for(i=0;i<28;i++)
 	{
 		j*=2;
 		lim[i]=j-1;
@@ -70,22 +70,19 @@ int main(int argc,char **argv)
 			continue;
 		if(count > lim[idx])
 			idx++;
-		tree_balance();
 		/*if(tree_balance())
 		{
 			if(tree_v_mov()) //此时last有效
 				break;
 		}*/
-		l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
+		tree_balance();
+		//l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
+		l=t_b_mov();
 		if(l)
 			break;
-//		i=tree_sort_list(root,s,count);
-//		if(i != count)
-//		{printf("ERROR!! i=%d\tcount=%d\n",i,count);return 1;}
 		t++;
 	}
-	j=calc_deep(count);
-	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
+	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
 	i=tree_sort_list(root,s,count);
 	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
 	/*for(i=2;i<EXTBUF;i++)
@@ -115,26 +112,7 @@ int main(int argc,char **argv)
 	free(p);
 	free(q);
 	printf("\n");
-	return 0;
-};
-//}}}
-//{{{int calc_deep(unsigned long c)
-//参数c=当前节点总数
-int calc_deep(unsigned long c)
-{
-	int i;
-	unsigned long m=2;
-	if(root != NULL)
-		i=1;
-	else
-		return 0;
-	while(i<=31)	//set the max count of point;currently support 4G
-	{
-		if(c <= (m-1))
-			return i;
-		m=m*2;i++;
-	}
-	return 32;
+	return l;
 };
 //}}}
 //{{{int tree_sort_list(_TR *t,_TR **save,int cnt)
@@ -727,7 +705,115 @@ int tree_bb_mov()
 	return 0;
 };
 //}}}
-
+//{{{int t_b_mov()
+/*继续测试，ld-lm or rd-rm >=2的情形出错的原因*/
+int t_b_mov()
+{
+	_TR *c,*t,*m1,*m2;
+	int i,j,k,v1,v2;
+	t=root;c=NULL;k=0;
+	while(t != NULL)
+	{
+		i = t->ld - t->lm;j = t->rd - t->rm;
+		if(i >= 2)
+		{c=t;t=t->left;continue;}
+		if(j >= 2)
+		{c=t;t=t->right;continue;}
+		break;
+	}
+	if(c == NULL)
+	{
+		return 0;
+		c=root;
+		if(c != NULL)
+		{
+			i=c->ld > c->rd ? c->ld:c->rd;
+			j=c->lm > c->rm ? c->rm:c->lm;
+			if(i<(j+2))
+				return 0;
+		}
+		zz++;
+	}
+	m1=m2=c;v1=v2=-1;
+	while(m1 != NULL)
+	{
+		i=(m1->ld >= m1->rd ?(m1->ld):(m1->rd));
+		if(i == 1)
+			break;
+		if(m1->ld >= m1->rd)
+			m1=m1->left;
+		else
+			m1=m1->right;
+	}
+	while(m2 != NULL)
+	{
+		i=m2->lm >= m2->rm ?(m2->rm):(m2->lm);
+		if(i == 1)
+			break;
+		if(m2->lm >= m2->rm)
+			m2=m2->right;
+		else
+			m2=m2->left;
+	}
+	memset((void*)s,0,sizeof(_TR*)*(count+3));
+	j=tree_sort_list(c,s,count);
+	for(i=0;i<j;i++)
+	{
+		if(s[i] == m1)
+		{v1=i;break;}
+	}
+	for(i=0;i<j;i++)
+	{
+		if(s[i] == m2)
+		{v2=i;break;}
+	}
+	if((v1 == -1) || (v2 == -1))
+	{printf("error 001\n");return 1;}
+	k=m1->vol;t=m1->top;
+	if(m1 == NULL || m2 == NULL || t == NULL)
+	{printf("error 002\n");return 1;}
+//	return 0;
+	if(t->left == m1)
+	{t->left=NULL;t->ld=t->lm=1;}
+	else
+	{t->right=NULL;t->rd=t->rm=1;}
+	if(v1 < v2)
+	{
+		for(i=(v1+1);i<v2;i++)
+		{j=s[i]->vol;s[i]->vol=k;k=j;}
+		if(m2->left == NULL)
+		{m2->left=m1;m1->top=m2;m1->vol=k;}
+		else
+		{m2->right=m1;m1->top=m2;m1->vol=m2->vol;m2->vol=k;}
+	}
+	else
+	{
+		for(i=(v1-1);i>v2;i--)
+		{j=s[i]->vol;s[i]->vol=k;k=j;}
+		if(m2->right == NULL)
+		{m2->right=m1;m1->top=m2;m1->vol=k;}
+		else
+		{m2->left=m1;m1->top=m2;m1->vol=m2->vol;m2->vol=k;}
+	}
+	k=0;
+	while(k<2)
+	{
+		while(t->top != NULL)
+		{
+			i=(t->ld >= t->rd ? (t->ld+1):(t->rd+1));
+			j=(t->lm >= t->rm ? (t->rm+1):(t->lm+1));
+			c=t;t=t->top;
+			if(c == t->left)
+			{t->ld=i;t->lm=j;}
+			else
+			{t->rd=i;t->rm=j;}
+		}
+		k++;t=m1;
+	}
+	cc++;
+	return 0;
+};
+//}}}
 
 
 
