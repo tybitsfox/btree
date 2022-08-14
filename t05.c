@@ -41,7 +41,7 @@ int main(int argc,char **argv)
 	_TR	*t=NULL;
 	int i,j,k,l;
 	char ch[1024];
-	k=MINYCNT;
+	k=MINYCNT;l=0;
 	if(argc == 2)
 	{
 		k=atoi(argv[1]);
@@ -73,15 +73,15 @@ int main(int argc,char **argv)
 			idx++;
 		/*if(tree_balance())
 		{
-			if(tree_v_mov()) //此时last有效
+			l=tree_v_mov(); //此时last有效
+			if(l)
 				break;
 		}*/
 		tree_balance();
-		//l=tree_b_mov();	//测试表明，在树生成后统一使用该函数调整，效率更低。
 		l=t_b_mov();
 		if(l)
 			break;
-		i=tree_sort_list(root,s,count);
+		//i=tree_sort_list(root,s,count);
 		t++;
 	}
 	/*if(l)
@@ -101,33 +101,9 @@ int main(int argc,char **argv)
 			close(k);
 		}
 	}*/
-	/*printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
+	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
 	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);*/
-	/*for(i=2;i<EXTBUF;i++)
-	{
-		printf("press 'q' to exit,else insert a node: ");
-		memset(ch,0,80);
-		fgets(ch,80,stdin);
-		if(ch[0] == 'q')
-			break;
-		while(1)
-		{
-			j=rand()%(k*5);
-			if(tree_ins(t,j))
-				continue;
-			tree_balance();
-			l=tree_b_mov();
-			if(l)
-				break;
-			t++;
-			break;
-		}
-		j=calc_deep(count);
-		printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,j);
-		//i=tree_sort_list(root,s,count);
-		printf("list count=%d\tmoved times=%d\n",j,cc);
-	}*/
+	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
 	free(p);
 	free(q);
 	printf("\n");
@@ -150,10 +126,8 @@ int tree_sort_list(_TR *t,_TR **save,int cnt)
 	cur=t;i=0;
 	while(1)
 	{
-		if(i>=cnt)
-			return i;
 		if(cur->left == NULL)
-		{tmp=cur;save[i]=cur;i++;}
+		{save[i]=cur;i++;}
 		else
 		{
 			while(cur->left != NULL)
@@ -164,8 +138,6 @@ int tree_sort_list(_TR *t,_TR **save,int cnt)
 		{
 			while(1)
 			{
-				if(i>=cnt)
-					return i;
 				tmp=cur;
 				cur=cur->top;
 				if(cur == t->top)
@@ -733,65 +705,59 @@ int t_b_mov()
 	t=root;c=NULL;k=0;
 	while(t != NULL)
 	{
-		i = t->ld - t->lm;j = t->rd - t->rm;
-		if(i >= 2)
-		{c=t;t=t->left;continue;}
-		if(j >= 2)
-		{c=t;t=t->right;continue;}
-		break;
-	}
-	if(c == NULL)
-	{
-		return 0;
-		c=root;
-		if(c != NULL)
+		if((t->lm == 1) || (t->rm == 1))
+			break;
+		if(t->lm > t->rm)
 		{
-			i=c->ld > c->rd ? c->ld:c->rd;
-			j=c->lm > c->rm ? c->rm:c->lm;
-			if(i<(j+2))
-				return 0;
+			if(t->ld >= (t->rm+2))
+				c=t;
+			t=t->right;
 		}
-		zz++;
-	}
-	m1=m2=c;v1=v2=-1;
-	while(m1 != NULL)
-	{
-		i=(m1->ld >= m1->rd ?(m1->ld):(m1->rd));
-		if(i == 1)
-			break;
-		if(m1->ld >= m1->rd)
-			m1=m1->left;
 		else
-			m1=m1->right;
+		{
+			if(t->rd >= (t->lm+2))
+				c=t;
+			t=t->left;
+		}
 	}
-	while(m2 != NULL)
+	if((t == NULL) || (c == NULL))
+		return 0;
+	m2=t;
+	if(c->lm > c->rm)
+		t=c->left;
+	else
+		t=c->right;
+	while(t != NULL)
 	{
-		i=m2->lm >= m2->rm ?(m2->rm):(m2->lm);
-		if(i == 1)
+		if((t->ld == 1) && (t->rd == 1))
 			break;
-		if(m2->lm >= m2->rm)
-			m2=m2->right;
+		if(t->ld > t->rd)
+			t=t->left;
 		else
-			m2=m2->left;
+			t=t->right;
 	}
-	memset((void*)s,0,sizeof(_TR*)*(count+3));
+	if(t == NULL)
+		return 2;
+	m1=t;v1=v2=-1;
+	//memset(s,0,sizeof(_TR*)*count);
 	j=tree_sort_list(c,s,count);
 	for(i=0;i<j;i++)
 	{
 		if(s[i] == m1)
 		{v1=i;break;}
 	}
+	if(v1 == -1)
+		return 32;
 	for(i=0;i<j;i++)
 	{
 		if(s[i] == m2)
 		{v2=i;break;}
 	}
-	if((v1 == -1) || (v2 == -1))
-	{printf("error 001\n");deep_last[0]=c;deep_last[1]=m1;deep_last[2]=m2;return 1;}
+	if(v2 == -1)
+		return 33;
 	k=m1->vol;t=m1->top;
-	if(m1 == NULL || m2 == NULL || t == NULL)
-	{printf("error 002\n");return 1;}
-//	return 0;
+	if(t == NULL)
+	{return 4;}
 	if(t->left == m1)
 	{t->left=NULL;t->ld=t->lm=1;}
 	else
