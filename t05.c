@@ -17,8 +17,14 @@ typedef struct _TREE
 	struct _TREE *top;
 	struct _TREE *left;
 	struct _TREE *right;
-	unsigned short ld,lm;
-	unsigned short rd,rm;
+/*	union{ unsigned int deep;
+		unsigned char ld;
+		unsigned char lm;
+		unsigned char rd;
+		unsigned char rm;
+	}; */
+	unsigned char ld,lm;
+	unsigned char rd,rm;
 } _TR;
 
 _TR		*root=NULL,*last=NULL;
@@ -30,9 +36,10 @@ int idx=0;
 
 int tree_sort_list(_TR *t,_TR **save,int cnt);//traverse by value's size(only low to high)
 int tree_balance();//balance by pointer
-int tree_ins(_TR *t,int i);//created new node
-int tree_b_mov();	//balance by value,from root to leaf
-int tree_v_mov();	//balance by value,from new leaf to root
+int tree_ins(_TR *t,int i);	//created new node
+int tree_b_mov();			//balance by value,from root to leaf
+int tree_v_mov();			//balance by value,from new leaf to root
+int tree_del(_TR *t);		//delete a node
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
@@ -503,7 +510,94 @@ int tree_b_mov()
 	return 0;
 };
 //}}}
+//{{{int tree_del(_TR *t)
+int tree_del(_TR *t)
+{
+	_TR *c,*m,*c1,*c2,*c3;
+	int i,j,k;
+	c=t;m=c->top;
+	if((c->ld == 1) && (c->rd == 1))
+	{
+		m=c->top;
+		if(m == NULL)
+		{root=NULL;count=0;return 0;}
+		if(m->left == c)
+		{m->left=NULL;m->ld=m->rd=1;}
+		else
+		{m->right=NULL;m->ld=m->rd=1;}
+		goto del_01;
+	}
+	if((c->ld == 1) || (c->rd == 1))
+	{
+		if(c->ld > 1)
+			c1=c->left;
+		else
+			c1=c->right;
+		if(m->left == c)
+		{
+			m->left=c1;c1->top=m;
+			m->ld=(c1->ld > c1->rd ?(c1->ld+1):(c1->rd+1));
+			m->lm=(c1->lm > c1->rd ?(c1->rm+1):(c1->lm+1));
+		}
+		else
+		{
+			m->right=c1;c1->top=m;
+			m->rd=c1->ld > c1->rd ? (c1->ld+1):(c1->rd+1);
+			m->rm=c1->lm > c1->rm ? (c1->rm+1):(c1->lm+1);
+		}
+		goto del_01;
+	}
+//begin have both children
+	if(c->ld > c->rd) //调整大的子树
+	{
+		c1=c->left;c3=NULL;
+		while(c1->right !=NULL)
+		{c1=c1->right;}
+		c2=c1->left;c3=c1->top;
+		if(c2 != NULL)
+		{
+			c3=c1->top;
+			if(c3->left == c1)
+			{
+				c3->left=c2;c2->top=c;
+				c3->ld=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
+				c3->lm=(c2->lm > c2->rm ?(c2->rm+1):(c2->lm+1));
+			}
+			else
+			{
+				c3->right=c2;c2->top=c;
+				c3->rd=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
+				c3->rm=(c2->lm > c2->rm ?(c2->rm+1):(c2->lm+1));
+			}
+		}
+		else
+		{c3->right=NULL;c3->rd=c3->rm=1;}
+		if(m->left == c)
+		{m->left=c1;c1->top=m;}
+		else
+		{m->right=c1;c1->top=m;}
+		m=c3;
+		goto del_01;
+	}
+	else
+		c1=c->right;
 
+
+del_01:	
+	while(m != root)
+	{
+		i=m->ld > m->rd ? (m->ld+1):(m->rd+1);
+		j=m->lm > m->rm ? (m->rm+1):(m->lm+1);
+		c1=m;m=m->top;
+		if(m->left == c1)
+		{m->ld=i;m->lm=j;}
+		else
+		{m->rd=i;m->rm=j;}
+	}
+	count--;
+	return 0;
+};
+//}}}
 
 
 

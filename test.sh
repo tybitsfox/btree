@@ -9,7 +9,11 @@ fi
 if [ -z "$l" ];then
 	let l=99
 fi
-
+if [ $l -le 1 ];then
+	./t05 $k
+	echo "runtime=$SECONDS return=$?"
+	exit
+fi
 while [ $i -eq 0 ]
 do
 	let "j += 1"
