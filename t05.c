@@ -78,6 +78,12 @@ int main(int argc,char **argv)
 				break;
 		}*/
 		tree_balance();
+		/*l=tree_sort_list(root,s,count);
+		for(i=0;i<l;i++)
+		{
+			printf("%d\t",s[i]->vol);
+		}
+		printf("\n--end--\n");*/
 		l=t_b_mov();
 		if(l)
 			break;
@@ -103,7 +109,7 @@ int main(int argc,char **argv)
 	}*/
 	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
 	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
+	printf("list count=%d\tmoved times=%d\tbig move=%d\treturn=%d\n",i,cc,zz,l);
 	free(p);
 	free(q);
 	printf("\n");
@@ -705,41 +711,45 @@ int t_b_mov()
 	t=root;c=NULL;k=0;
 	while(t != NULL)
 	{
-		if((t->lm == 1) || (t->rm == 1))
-			break;
-		if(t->lm > t->rm)
-		{
-			if(t->ld >= (t->rm+2))
-				c=t;
-			t=t->right;
-		}
-		else
-		{
-			if(t->rd >= (t->lm+2))
-				c=t;
-			t=t->left;
-		}
+		i=t->ld - t->lm; j=t->rd - t->rm;
+		if(i >= 2)
+		{k++;t=t->left;continue;}
+		if(j >= 2)
+		{k++;t=t->right;continue;}
+		c=t;
+		break;//此时,t为分支点
 	}
-	if((t == NULL) || (c == NULL))
-		return 0;
-	m2=t;
-	if(c->lm > c->rm)
-		t=c->left;
-	else
-		t=c->right;
-	while(t != NULL)
+	if(k == 0)
 	{
-		if((t->ld == 1) && (t->rd == 1))
-			break;
-		if(t->ld > t->rd)
-			t=t->left;
-		else
-			t=t->right;
+		c=root;
+		i=c->ld > c->rd ?c->ld:c->rd;
+		j=c->lm > c->rm ?c->rm:c->lm;
+		if(i<(j+2))
+			return 0;
+		zz++;
 	}
-	if(t == NULL)
-		return 2;
-	m1=t;v1=v2=-1;
-	//memset(s,0,sizeof(_TR*)*count);
+	m1=c;
+	while(m1 != NULL)
+	{
+		if((m1->ld == 1) && (m1->rd == 1))
+			break;
+		if(m1->ld > m1->rd)
+			m1=m1->left;
+		else
+			m1=m1->right;
+	}
+	m2=c;
+	while(m2 != NULL)
+	{
+		if((m2->lm == 1) || (m2->rm == 1))
+			break;
+		if(m2->lm > m2->rm)
+			m2=m2->right;
+		else
+			m2=m2->left;
+	}
+	v1=v2=-1;
+	memset(s,0,sizeof(_TR*)*count);
 	j=tree_sort_list(c,s,count);
 	for(i=0;i<j;i++)
 	{
