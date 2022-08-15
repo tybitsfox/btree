@@ -556,16 +556,11 @@ int tree_del(_TR *t)
 		c2=c1->left;c3=c1->top;
 		if(c2 != NULL)
 		{
-			c3=c1->top;
 			if(c3->left == c1)
-			{
-				c3->left=c2;c2->top=c;
-				c3->ld=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
-				c3->lm=(c2->lm > c2->rm ?(c2->rm+1):(c2->lm+1));
-			}
+				return 1; //impossible
 			else
 			{
-				c3->right=c2;c2->top=c;
+				c3->right=c2;c2->top=c3;
 				c3->rd=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
 				c3->rm=(c2->lm > c2->rm ?(c2->rm+1):(c2->lm+1));
 			}
@@ -580,9 +575,31 @@ int tree_del(_TR *t)
 		goto del_01;
 	}
 	else
-		c1=c->right;
-
-
+	{
+		c1=c->right;c3=NULL;
+		while(c1->left != NULL)
+			c1=c1->left;
+		c2=c1->right;c3=c1->top;
+		if(c2 != NULL)
+		{
+			if(c3->left == c1)
+			{
+				c3->left=c2;c2->top=c3;
+				c3->ld=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
+				c3->lm=(c2->rd > c2->rm ?(c2->rm+1):(c2->lm+1));
+			}
+			else
+				return 1; //impossible
+		}
+		else
+		{c3->left=NULL;c3->ld=c3->lm=1;}
+		if(m->left == c)
+		{m->left=c1;c1->top=m;}
+		else
+		{m->right=c1;c1->top=m;}
+		m=c3;
+		goto del_01;
+	}
 del_01:	
 	while(m != root)
 	{
