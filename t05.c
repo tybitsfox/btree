@@ -37,19 +37,28 @@ int tree_ins(_TR *t,int i);	//created new node
 int tree_b_mov();			//balance by value,from root to leaf
 int tree_v_mov();			//balance by value,from new leaf to root
 int tree_del(_TR *t);		//delete a node
+int test_all(int m);		//testing code
 //{{{int main(int argc,char **argv)
 int main(int argc,char **argv)
 {
 	_TR	*t=NULL;
-	int i,j,k,l;
-	char ch[1024];
-	k=MINYCNT;l=0;
-	if(argc == 2)
+	int i,j,k,l,m;
+	k=MINYCNT;l=0;m=0;
+	switch(argc)
 	{
-		k=atoi(argv[1]);
-		if((k <= 1) || k >= 33554432) //2^25
-			k=MINYCNT;
-	}
+		case 2:
+			k=atoi(argv[1]);
+			if((k <= 1) || k >= 33554432) //2^25
+				k=MINYCNT;
+			break;
+		case 3:
+			k=atoi(argv[1]);
+			if((k <= 1) || k >= 33554432) //2^25
+				k=MINYCNT;
+			m=atoi(argv[2]);
+			if(m != 0)
+				m=1;
+	};
 	unsigned char *p=malloc(sizeof(_TR)*(k+EXTBUF));
 	unsigned char *q=malloc(sizeof(_TR*)*(k+EXTBUF));
 	if(p == NULL)
@@ -82,9 +91,7 @@ int main(int argc,char **argv)
 		l=tree_b_mov();
 		t++;
 	}
-	printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
-	i=tree_sort_list(root,s,count);
-	printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
+	test_all(m);
 	free(p);
 	free(q);
 	printf("\n");
@@ -597,6 +604,51 @@ del_01:
 	return 0;
 };
 //}}}
-
+//{{{int test_all(int m) 所有的测试代码移动到这个函数中
+int test_all(int m)
+{
+	char ch[1024];
+	int i,j,k,l;
+	if(m == 0)
+	{
+		printf("ldmax=%d\tldmin=%d\trdmax=%d\trdmin=%d\tcount=%d\tdeep=%d\n",root->ld,root->lm,root->rd,root->rm,count,idx+1);
+		i=tree_sort_list(root,s,count);
+		printf("list count=%d\tmoved times=%d\tbig move=%d\n",i,cc,zz);
+		return 0;
+	}
+	if(m == 1)
+	{
+		for(i=0;i<EXTBUF;i++)
+		{
+			printf("press 'q' to exit,a number of index to delete this node: ");
+			memset(ch,0,sizeof(ch));
+			fgets(ch,80,stdin);
+			if(ch[0] == 'q')
+				break;
+			k=atoi(ch);
+			if(k<0 || k >= count)
+			{
+				printf("error the index of tree\n");
+				continue;
+			}
+			j=tree_sort_list(root,s,count);
+			if(j>100)
+			{printf("please to create a tree to less than 100 nodes for test!\n");return 0;}
+			for(l=0;l<j;l++)
+			{printf("%d\t",s[l]->vol);}
+			printf("\nTarget delete index=%d value=%d\n",k,s[k]->vol);
+			tree_del(s[k]);
+			tree_b_mov();
+			j=tree_sort_list(root,s,count);
+			for(l=0;l<j;l++)
+			{printf("%d\t",s[l]->vol);}
+			printf("\n\n");
+			memset(s,0,sizeof(_TR*)*(count+3));
+		}
+		return 0;
+	}
+	return 0;
+};
+//}}}
 
 
