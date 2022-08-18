@@ -525,9 +525,9 @@ int tree_del(_TR *t)
 		if(m == NULL)
 		{root=NULL;count=0;return 0;}
 		if(m->left == c)
-		{m->left=NULL;m->ld=m->rd=1;}
+		{m->left=NULL;m->ld=m->lm=1;}
 		else
-		{m->right=NULL;m->ld=m->rd=1;}
+		{m->right=NULL;m->rd=m->rm=1;}
 		goto del_01;
 	}
 	if((c->ld == 1) || (c->rd == 1))
@@ -635,7 +635,7 @@ int test_all(int m)
 			if(j>100)
 			{printf("please to create a tree to less than 100 nodes for test!\n");return 0;}
 			for(l=0;l<j;l++)
-			{printf("%d\t",s[l]->vol);}
+			{printf("<%d,%d,%d>\t",s[l]->vol,s[l]->ld,s[l]->rd);}
 			printf("\nTarget delete index=%d value=%d\n",k,s[k]->vol);
 			tree_del(s[k]);
 			tree_b_mov();
