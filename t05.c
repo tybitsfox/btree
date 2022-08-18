@@ -520,45 +520,24 @@ int tree_del(_TR *t)
 	_TR *c,*m,*c1,*c2,*c3;
 	int i,j,k;
 	c=t;m=c->top;
-	if((c->ld == 1) && (c->rd == 1))
-	{
-		if(m == NULL)
-		{root=NULL;count=0;return 0;}
-		if(m->left == c)
-		{m->left=NULL;m->ld=m->lm=1;}
-		else
-		{m->right=NULL;m->rd=m->rm=1;}
-		goto del_01;
-	}
-	if((c->ld == 1) || (c->rd == 1))
-	{
-		if(c->ld > 1)
-			c1=c->left;
-		else
-			c1=c->right;
-		if(m == NULL)
-		{root=c1;c1->top=NULL;count--;return 0;}
-		if(m->left == c)
-		{
-			m->left=c1;c1->top=m;
-			m->ld=(c1->ld > c1->rd ?(c1->ld+1):(c1->rd+1));
-			m->lm=(c1->lm > c1->rd ?(c1->rm+1):(c1->lm+1));
-		}
-		else
-		{
-			m->right=c1;c1->top=m;
-			m->rd=c1->ld > c1->rd ? (c1->ld+1):(c1->rd+1);
-			m->rm=c1->lm > c1->rm ? (c1->rm+1):(c1->lm+1);
-		}
-		goto del_01;
-	}
-//begin have both children
-	if(c->ld > c->rd) //调整大的子树
+	if(c->ld >= c->rd) //调整大的子树
 	{
 		c1=c->left;c3=NULL;
+		if(c1 == NULL) //c is a leaf
+		{
+			if(m==NULL)
+			{root=NULL;count=0;return 0;}
+			if(m->left==c)
+			{m->left=NULL;m->ld=m->lm=1;}
+			else
+			{m->right=NULL;m->rd=m->rm=1;}
+			goto del_01;
+		}
 		while(c1->right !=NULL)
 		{c1=c1->right;}
 		c2=c1->left;c3=c1->top;
+		if(c3 == c)
+			goto del_02;
 		if(c2 != NULL)
 		{
 			c3->right=c2;c2->top=c3;
@@ -577,6 +556,8 @@ int tree_del(_TR *t)
 		while(c1->left != NULL)
 			c1=c1->left;
 		c2=c1->right;c3=c1->top;
+		if(c3 == c)
+			goto del_02;
 		if(c2 != NULL)
 		{
 			c3->left=c2;c2->top=c3;
@@ -588,6 +569,21 @@ int tree_del(_TR *t)
 		c->vol=c1->vol;
 		m=c3;
 		goto del_01;
+	}
+del_02:
+	if(m == NULL) //root
+	{root=c1;c1->top=NULL;count--;return 0;}
+	if(m->left==c)
+	{
+		m->left=c1;c1->top=m;
+		m->ld=(c1->ld > c1->rd ?(c1->ld+1):(c1->rd+1));
+		m->lm=(c1->lm > c1->rd ?(c1->rm+1):(c1->lm+1));
+	}
+	else
+	{
+		m->right=c1;c1->top=m;
+		m->rd=c1->ld > c1->rd ? (c1->ld+1):(c1->rd+1);
+		m->rm=c1->lm > c1->rm ? (c1->rm+1):(c1->lm+1);
 	}
 del_01:	
 	while(m != root)
