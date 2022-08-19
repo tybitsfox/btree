@@ -1,8 +1,8 @@
 # btree
 a simple and perfect self balance tree code
 一个简单高效的自平衡二叉树实现代码。效率不输红黑树 ;-)
-SPDX-License-Identifier: GPL-2.0+
-自平衡二叉树的完美实现
+SPDX-License-Identifier: GPL-2.0+<br>
+自平衡二叉树的完美实现<br>
 2022-7-25已经可以生成完美的自平衡二叉树，测试的2^n-1的数据量插入都可生成完美的n层二叉树，但大批量数据的连续插入效率还有待改善。
 2022-8-18已完美实现自平衡二叉树的全部功能：节点插入，左右子树的平衡，节点的删除，树的遍历。其中树的平衡使用三个可选的函数实现：
 btree_balance(旋转，移动节点实现)，tree_b_mov(自上而下移动节点内数值实现)和tree_v_mov(自下(新节点)而上的数值移动实现的平衡)。
