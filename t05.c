@@ -539,6 +539,8 @@ int tree_del(_TR *t)
 			else
 				goto del_02;
 		}
+		if(m == NULL)
+		{root=c1;c1->top=NULL;return 0;}
 		if(m->left==c)
 		{m->left=c1;c1->top=m;m->ld=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
 		else
@@ -555,6 +557,8 @@ int tree_del(_TR *t)
 			else
 				goto del_02;
 		}
+		if(m == NULL)
+		{root=c1;c1->top=NULL;return 0;}
 		if(m->left==c)
 		{m->left=c1;c1->top=m;m->ld=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
 		else
