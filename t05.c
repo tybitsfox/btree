@@ -529,71 +529,82 @@ int tree_del(_TR *t)
 	_TR *c,*m,*c1,*c2,*c3;
 	int i,j,k;
 	c=t;m=c->top;
-	if(c->ld >= c->rd) //调整大的子树
+	if(c->left == NULL)
 	{
-		c1=c->left;c3=NULL;
-		if(c1 == NULL) //c is a leaf
+		c1=c->right;
+		if(c1 == NULL)
 		{
 			if(m==NULL)
 			{root=NULL;count=0;return 0;}
-			if(m->left==c)
-			{m->left=NULL;m->ld=m->lm=1;}
 			else
-			{m->right=NULL;m->rd=m->rm=1;}
-			goto del_01;
+				goto del_02;
 		}
-		while(c1->right !=NULL)
-		{c1=c1->right;}
-		c2=c1->left;c3=c1->top;
-		if(c3 == c)
-			goto del_02;
-		if(c2 != NULL)
-		{
-			c3->right=c2;c2->top=c3;
-			c3->rd=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
-			c3->rm=(c2->lm > c2->rm ?(c2->rm+1):(c2->lm+1));
-		}
+		if(m->left==c)
+		{m->left=c1;c1->top=m;m->ld=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
 		else
-		{c3->right=NULL;c3->rd=c3->rm=1;}
-		c->vol=c1->vol; //删除节点c1,将c1的数值移动至c节点，层数无需调整c节点，后面统一调整
-		m=c3;
+		{m->right=c1;c1->top=m;m->rd=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
 		goto del_01;
+	}
+	if(c->right == NULL)
+	{
+		c1=c->left;
+		if(c1 == NULL)
+		{
+			if(m==NULL)
+			{root=NULL;count=0;return 0;}
+			else
+				goto del_02;
+		}
+		if(m->left==c)
+		{m->left=c1;c1->top=m;m->ld=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
+		else
+		{m->right=c1;c1->top=m;m->rd=(c1->ld > c1->rd?(c1->ld+1):(c1->rd+1));}
+		goto del_01;
+	}
+	if(c->ld > c->rd)
+	{
+		c1=c->left;
+		while(c1->right != NULL)
+			c1=c1->right;
+		c2=c1->left;m=c1->top;c->vol=c1->vol;
 	}
 	else
 	{
-		c1=c->right;c3=NULL;
+		c1=c->right;
 		while(c1->left != NULL)
 			c1=c1->left;
-		c2=c1->right;c3=c1->top;
-		if(c3 == c)
-			goto del_02;
+		c2=c1->right;m=c1->top;c->vol=c1->vol;
+	}
+	if(m->left == c1)
+	{
+		m->left=c2;
 		if(c2 != NULL)
 		{
-			c3->left=c2;c2->top=c3;
-			c3->ld=(c2->ld > c2->rd ?(c2->ld+1):(c2->rd+1));
-			c3->lm=(c2->rd > c2->rm ?(c2->rm+1):(c2->lm+1));
+			m->ld=(c2->ld > c2->rd?(c2->ld+1):(c2->rd+1));
+			m->lm=(c2->lm > c2->rm?(c2->rm+1):(c2->lm+1));
+			c2->top=m;
 		}
 		else
-		{c3->left=NULL;c3->ld=c3->lm=1;}
-		c->vol=c1->vol;
-		m=c3;
-		goto del_01;
-	}
-del_02:
-	if(m == NULL) //root
-	{root=c1;c1->top=NULL;count--;return 0;}
-	if(m->left==c)
-	{
-		m->left=c1;c1->top=m;
-		m->ld=(c1->ld > c1->rd ?(c1->ld+1):(c1->rd+1));
-		m->lm=(c1->lm > c1->rd ?(c1->rm+1):(c1->lm+1));
+		{m->ld=1;m->lm=1;}
 	}
 	else
 	{
-		m->right=c1;c1->top=m;
-		m->rd=c1->ld > c1->rd ? (c1->ld+1):(c1->rd+1);
-		m->rm=c1->lm > c1->rm ? (c1->rm+1):(c1->lm+1);
+		m->right=c2;
+		if(c2 != NULL)
+		{
+			m->rd=(c2->ld > c2->rd?(c2->ld+1):(c2->rd+1));
+			m->rm=(c2->lm > c2->rm?(c2->rm+1):(c2->lm+1));
+			c2->top=m;
+		}
+		else
+		{m->rd=1;m->rm=1;}
 	}
+	goto del_01;
+del_02:
+	if(m->left==c)
+	{m->left=NULL;count--;m->ld=m->lm=1;return 0;}
+	else
+	{m->right=NULL;count--;m->rd=m->rm=1;return 0;}
 del_01:	
 	while(m != root)
 	{
